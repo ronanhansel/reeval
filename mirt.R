@@ -38,6 +38,7 @@ for (i in 1:length(input_files)) {
     model <- mirt(data, 1, models[j])
     coefficient <- coef(model)
     write.csv(coefficient, output_files_list[[i]][j])
+    fscores(model)
   }
 }
 
