@@ -13,6 +13,8 @@ def item_response_fn_1PL(d, theta):
 def get_new_test_taker_answer(question_index):
     new_test_taker = pd.read_csv('./clean_data/divided_base/divided_base_01-ai_yi-34b-chat_0.csv')
     answer = new_test_taker.iloc[question_index, -1]
+    if answer == 0.5:
+        answer = 1
     answer = torch.tensor(answer)
     return answer
 
@@ -24,7 +26,7 @@ def fit_theta(Z, asked_question_list, asked_answer_list, epoch=100):
         for i, asked_question_index in enumerate(asked_question_list):
             prob = item_response_fn_1PL(Z[asked_question_index], theta_hat)
             bernoulli = torch.distributions.Bernoulli(prob)
-            log_prob = log_prob + bernoulli.log_prob(asked_answer_list[i])
+            log_prob = log_prob + bernoulli.log_prob(asked_answer_list[i].float())
         log_prob.backward()
         optimizer.step()
         optimizer.zero_grad()
@@ -45,10 +47,12 @@ init_answer = get_new_test_taker_answer(init_question_index)
 unasked_question_list = [i for i in range(I)]
 unasked_question_list.remove(init_question_index)
 asked_question_list = [init_question_index]
-asked_answer_list = [init_answer]
+asked_answer_list = [init_answer.float()]
 
 for k in range(K):
+    print(f'\nepoch: {k}')
     theta_hat = fit_theta(Z, asked_question_list, asked_answer_list)
+    print(f'theta_hat: {theta_hat}')
 
     fisher_info_list = []
 
@@ -72,15 +76,10 @@ for k in range(K):
 
     unasked_question_index_with_max_fisher_info = torch.argmax(torch.tensor(fisher_info_list)).item()
     new_question_index = unasked_question_list[unasked_question_index_with_max_fisher_info]
-    print(new_question_index)
+    print(f'new_question_index: {new_question_index}')
 
     new_answer = get_new_test_taker_answer(new_question_index)
-    unasked_question_list.remove(new_answer)
+    unasked_question_list.remove(new_question_index)
     asked_question_list.append(new_question_index)
-    asked_answer_list.append(new_answer)
-
-    # new_test_taker.ask(question_with_max_fisher_info)
-    # unasked_questions.remove(question_with_max_fisher_info)
-
-# return theta_hat
+    asked_answer_list.append(new_answer.float())
 
