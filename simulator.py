@@ -18,5 +18,14 @@ class SimulatedTestTaker():
         return self.ability
 
 if __name__ == "__main__":
-    new_testtaker = SimulatedTestTaker()
+    
+    torch.manual_seed(30)
+    sample_size = 1000
+
+    a = torch.distributions.Uniform(0, 3).sample((sample_size,))
+    b = torch.distributions.Uniform(-3, 3).sample((sample_size,))
+    c = torch.distributions.Uniform(0.49, ).sample((sample_size,))
+    Z = torch.stack([a,b,c])
+
+    new_testtaker = SimulatedTestTaker(Z)
     
