@@ -2,7 +2,7 @@ import pandas as pd
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from distance import calculate_3d_wasserstein_distance, calculate_1d_wasserstein_distance
+from distance import *
 
 # 1D Wasserstein Distance
 with open("./real/1D_Wasserstein_Distance.txt", "w", encoding="utf-8") as f:
@@ -13,7 +13,7 @@ with open("./real/1D_Wasserstein_Distance.txt", "w", encoding="utf-8") as f:
         perturb1_path = f"model_coef/divided_perturb1_coef_{model}_clean.csv"
         perturb2_path = f"model_coef/divided_perturb2_coef_{model}_clean.csv"
 
-        para_list =  ['a1', 'd', 'g']
+        para_list =  ['g', 'a1', 'd']
         for para in para_list:
             base_coef = pd.read_csv(base_path, usecols=[para])
             perturb1_coef = pd.read_csv(perturb1_path, usecols=[para])

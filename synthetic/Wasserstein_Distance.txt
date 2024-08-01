@@ -1,0 +1,83 @@
+
+
+
+epsilon = 0.02
+distri_diff = 0.1Fail with Z0 at epsilon = 0.02, distri_diff = 0.1
+distri_diff = 0.2Fail with Z0 at epsilon = 0.02, distri_diff = 0.2
+distri_diff = 0.30000000000000004Fail with Z0 at epsilon = 0.02, distri_diff = 0.30000000000000004
+distri_diff = 0.4Fail with Z0 at epsilon = 0.02, distri_diff = 0.4
+distri_diff = 0.5Fail with Z0 at epsilon = 0.02, distri_diff = 0.5
+distri_diff = 0.6Fail with Z0 at epsilon = 0.02, distri_diff = 0.6
+distri_diff = 0.7000000000000001Fail with Z0 at epsilon = 0.02, distri_diff = 0.7000000000000001
+distri_diff = 0.8Fail with Z0 at epsilon = 0.02, distri_diff = 0.8
+distri_diff = 0.9Succeed with Z0 at epsilon = 0.02, distri_diff = 0.9Distance between Z* and Z_0: 0.01587279658768527
+Distance between Y* and Y_0: 0.5068629666666666
+
+distri_diff = 1.0Succeed with Z0 at epsilon = 0.02, distri_diff = 1.0Distance between Z* and Z_0: 0.025707113483606322
+Distance between Y* and Y_0: 0.5428671999999998
+
+
+
+epsilon = 0.05
+distri_diff = 0.1Fail with Z0 at epsilon = 0.05, distri_diff = 0.1
+distri_diff = 0.2Fail with Z0 at epsilon = 0.05, distri_diff = 0.2
+distri_diff = 0.30000000000000004Fail with Z0 at epsilon = 0.05, distri_diff = 0.30000000000000004
+distri_diff = 0.4Fail with Z0 at epsilon = 0.05, distri_diff = 0.4
+distri_diff = 0.5Fail with Z0 at epsilon = 0.05, distri_diff = 0.5
+distri_diff = 0.6Fail with Z0 at epsilon = 0.05, distri_diff = 0.6
+distri_diff = 0.7000000000000001Fail with Z0 at epsilon = 0.05, distri_diff = 0.7000000000000001
+distri_diff = 0.8Fail with Z0 at epsilon = 0.05, distri_diff = 0.8
+distri_diff = 0.9Fail with Z0 at epsilon = 0.05, distri_diff = 0.9
+distri_diff = 1.0Fail with Z0 at epsilon = 0.05, distri_diff = 1.0
+
+
+epsilon = 0.1
+distri_diff = 0.1Fail with Z0 at epsilon = 0.1, distri_diff = 0.1
+distri_diff = 0.2Fail with Z0 at epsilon = 0.1, distri_diff = 0.2
+distri_diff = 0.30000000000000004Fail with Z0 at epsilon = 0.1, distri_diff = 0.30000000000000004
+distri_diff = 0.4Fail with Z0 at epsilon = 0.1, distri_diff = 0.4
+distri_diff = 0.5Fail with Z0 at epsilon = 0.1, distri_diff = 0.5
+distri_diff = 0.6Fail with Z0 at epsilon = 0.1, distri_diff = 0.6
+distri_diff = 0.7000000000000001Fail with Z0 at epsilon = 0.1, distri_diff = 0.7000000000000001
+distri_diff = 0.8Fail with Z0 at epsilon = 0.1, distri_diff = 0.8
+distri_diff = 0.9Fail with Z0 at epsilon = 0.1, distri_diff = 0.9
+distri_diff = 1.0Fail with Z0 at epsilon = 0.1, distri_diff = 1.0
+
+
+epsilon = 0.2
+distri_diff = 0.1Fail with Z0 at epsilon = 0.2, distri_diff = 0.1
+distri_diff = 0.2Fail with Z0 at epsilon = 0.2, distri_diff = 0.2
+distri_diff = 0.30000000000000004Fail with Z0 at epsilon = 0.2, distri_diff = 0.30000000000000004
+distri_diff = 0.4Fail with Z0 at epsilon = 0.2, distri_diff = 0.4
+distri_diff = 0.5Fail with Z0 at epsilon = 0.2, distri_diff = 0.5
+distri_diff = 0.6Fail with Z0 at epsilon = 0.2, distri_diff = 0.6
+distri_diff = 0.7000000000000001Fail with Z0 at epsilon = 0.2, distri_diff = 0.7000000000000001
+distri_diff = 0.8Fail with Z0 at epsilon = 0.2, distri_diff = 0.8
+distri_diff = 0.9Fail with Z0 at epsilon = 0.2, distri_diff = 0.9
+distri_diff = 1.0Fail with Z0 at epsilon = 0.2, distri_diff = 1.0
+
+
+epsilon = 0.5
+distri_diff = 0.1Fail with Z0 at epsilon = 0.5, distri_diff = 0.1
+distri_diff = 0.2Fail with Z0 at epsilon = 0.5, distri_diff = 0.2
+distri_diff = 0.30000000000000004Fail with Z0 at epsilon = 0.5, distri_diff = 0.30000000000000004
+distri_diff = 0.4Fail with Z0 at epsilon = 0.5, distri_diff = 0.4
+distri_diff = 0.5Fail with Z0 at epsilon = 0.5, distri_diff = 0.5
+distri_diff = 0.6Fail with Z0 at epsilon = 0.5, distri_diff = 0.6
+distri_diff = 0.7000000000000001Fail with Z0 at epsilon = 0.5, distri_diff = 0.7000000000000001
+distri_diff = 0.8Fail with Z0 at epsilon = 0.5, distri_diff = 0.8
+distri_diff = 0.9Fail with Z0 at epsilon = 0.5, distri_diff = 0.9
+distri_diff = 1.0Fail with Z0 at epsilon = 0.5, distri_diff = 1.0
+
+
+epsilon = 1.0
+distri_diff = 0.1Fail with Z0 at epsilon = 1.0, distri_diff = 0.1
+distri_diff = 0.2Fail with Z0 at epsilon = 1.0, distri_diff = 0.2
+distri_diff = 0.30000000000000004Fail with Z0 at epsilon = 1.0, distri_diff = 0.30000000000000004
+distri_diff = 0.4Fail with Z0 at epsilon = 1.0, distri_diff = 0.4
+distri_diff = 0.5Fail with Z0 at epsilon = 1.0, distri_diff = 0.5
+distri_diff = 0.6Fail with Z0 at epsilon = 1.0, distri_diff = 0.6
+distri_diff = 0.7000000000000001Fail with Z0 at epsilon = 1.0, distri_diff = 0.7000000000000001
+distri_diff = 0.8Fail with Z0 at epsilon = 1.0, distri_diff = 0.8
+distri_diff = 0.9Fail with Z0 at epsilon = 1.0, distri_diff = 0.9
+distri_diff = 1.0Fail with Z0 at epsilon = 1.0, distri_diff = 1.0

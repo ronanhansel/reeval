@@ -2,42 +2,20 @@ import numpy as np
 from scipy.stats import wasserstein_distance
 import ot
 import scipy as sp
+import pandas as pd
+import matplotlib.pyplot as plt
 
-
-def calculate_1d_wasserstein_distance(vector1, vector2, vector3, bins=30):
-    """
-    Calculate the 1D-Wasserstein distance between three vectors.
-
-    Parameters:
-    vector1 (array-like): The first vector.
-    vector2 (array-like): The second vector.
-    vector3 (array-like): The third vector.
-    bins (int, optional): The number of bins for histogram calculation.
-        Default is 30.
-
-    Returns:
-    tuple: A tuple containing the Wasserstein distances between vector1 and
-        vector2, vector1 and vector3, and vector2 and vector3, respectively.
-    """
+def calculate_1d_wasserstein_distance(vector1, vector2, bins=30):
+   
     hist1, bin_edges1 = np.histogram(vector1, bins=bins, density=True)
     hist2, bin_edges2 = np.histogram(vector2, bins=bins, density=True)
-    hist3, bin_edges3 = np.histogram(vector3, bins=bins, density=True)
 
     bin_centers1 = (bin_edges1[:-1] + bin_edges1[1:]) / 2
     bin_centers2 = (bin_edges2[:-1] + bin_edges2[1:]) / 2
-    bin_centers3 = (bin_edges3[:-1] + bin_edges3[1:]) / 2
 
-    distance_1_2 = wasserstein_distance(
-        bin_centers1, bin_centers2, u_weights=hist1, v_weights=hist2
-    )
-    distance_1_3 = wasserstein_distance(
-        bin_centers1, bin_centers3, u_weights=hist1, v_weights=hist3
-    )
-    distance_2_3 = wasserstein_distance(
-        bin_centers2, bin_centers3, u_weights=hist2, v_weights=hist3
-    )
+    distance_1_2 = wasserstein_distance(bin_centers1, bin_centers2, u_weights=hist1, v_weights=hist2)
 
-    return distance_1_2, distance_1_3, distance_2_3
+    return distance_1_2
 
 # 3D Wasserstein Distance
 # https://pythonot.github.io/auto_examples/gromov/plot_gromov.html
@@ -69,6 +47,27 @@ def calculate_3d_wasserstein_distance(matrix1, matrix2, n_samples):
 
     return str(log0["gw_dist"])
 
+
+def plot_scatter(base_coef, perturb1_coef, perturb2_coef, axis_lim = False):
+    fig = plt.figure(figsize=(7, 7))
+    ax = fig.add_subplot(111, projection='3d')
+
+    print(base_coef[:, 0])
+    ax.scatter(base_coef[:, 0], base_coef[:, 1], base_coef[:, 2], c='r', label='Base Coef')
+    ax.scatter(perturb1_coef[:, 0], perturb1_coef[:, 1], perturb1_coef[:, 2], c='g', label='Perturb1 Coef')
+    ax.scatter(perturb2_coef[:, 0], perturb2_coef[:, 1], perturb2_coef[:, 2], c='b', label='Perturb2 Coef')
+
+    ax.set_xlabel('a1')
+    ax.set_ylabel('d')
+    ax.set_zlabel('g')
+
+    if axis_lim:
+        ax.set_xlim(-3, 3)
+        ax.set_ylim(-3, 3)
+        ax.set_zlim(-3, 3)
+
+    ax.legend()
+    plt.show()
 
 # if __name__ == "__main__":
     
