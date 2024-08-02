@@ -6,6 +6,7 @@ import numpy as np
 from scipy.stats import beta, lognorm, norm
 from utils import item_response_fn_3PL
 import torch
+import matplotlib.pyplot as plt
 
 def gen_random_para_matrix(sample_size, distri_diff = 0):
     a = 0.4548891252373536
@@ -40,46 +41,61 @@ def get_response_list(Z, theta_list):
     response_matrix = (np.random.rand(n_testtakers, n_questions) < psolve).astype(int)
     return response_matrix.tolist()
 
+def generate_perturb(Z, epsilon, n_samples, sigma=0.1):
+    Z_prime = Z + norm.rvs(scale=sigma, size=Z.shape)
+    current_distance = calculate_3d_wasserstein_distance(Z, Z_prime, n_samples)
+    
+    while abs(current_distance - epsilon) > 1e-2:
+        scaling_factor = epsilon / current_distance
+        Z_prime = Z + scaling_factor * (Z_prime - Z)
+        current_distance = calculate_3d_wasserstein_distance(Z, Z_prime, n_samples)
+        
+    return Z_prime, current_distance
+
 n_questions = 1000
 n_testtakers = 1000
-Z_stars = gen_random_para_matrix(n_questions)
-theta_stars = np.random.randn(n_testtakers)
-Y_stars = get_response_list(Z_stars, theta_stars)
+Z_star = gen_random_para_matrix(n_questions)
+theta_star = np.random.randn(n_testtakers)
+Y_star = get_response_list(Z_star, theta_star)
 
+epsilons = [i * 0.001 for i in range(1, 11)]
 # epsilons = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0]
-# distri_diffs = [0.1]
-epsilons = [0.02, 0.05, 0.1, 0.2, 0.5, 1.0]
-distri_diffs = np.arange(0.1, 1.1, 0.1)
+Z1s = []
+Z2s = []
+d_Y1s = []
+d_Y2s = []
 with open("./synthetic/Wasserstein_Distance.txt", "w", encoding="utf-8") as f:
     for epsilon in epsilons:
         f.write(f"\n\n\nepsilon = {epsilon}")
-        print(f"epsilon = {epsilon}")
-        Zs = []
-        Ys = []
-        for distri_diff in distri_diffs:
-            f.write(f"\ndistri_diff = {distri_diff}")
-            print(f"distri_diff = {distri_diff}")
-            for i in range(2): 
-                flag = False           
-                Z = gen_random_para_matrix(n_questions, distri_diff=distri_diff)
-                d_Z = calculate_3d_wasserstein_distance(Z_stars, Z, n_questions)
+        print(f"processing epsilon = {epsilon}")
 
-                if abs(float(d_Z) - epsilon) < 0.01:
-                    flag = True
-                    f.write(f"\nSucceed with Z{i} at epsilon = {epsilon}, distri_diff = {distri_diff}")
-                    break
+        Z1, d_Z1 = generate_perturb(Z_star, epsilon, n_questions)
+        Y1 = get_response_list(Z1, theta_star)
+        d_Y1 = calculate_1d_wasserstein_distance(Y_star, Y1)
+        f.write(f"Distance between Z* and Z1: {d_Z1}")
+        f.write(f"Distance between Y* and Y1: {d_Y1}")
+        Z1s.append(Z1)
+        d_Y1s.append(d_Y1)
 
-                else:
-                    flag = False
-                    f.write(f"\nFail with Z{i} at epsilon = {epsilon}, distri_diff = {distri_diff}")
-                    break
+        Z2, d_Z2 = generate_perturb(Z_star, epsilon, n_questions)
+        Y2 = get_response_list(Z2, theta_star)
+        d_Y2 = calculate_1d_wasserstein_distance(Y_star, Y2)
+        f.write(f"Distance between Z* and Z2: {d_Z2}")
+        f.write(f"Distance between Y* and Y2: {d_Y2}")
+        Z2s.append(Z2)
+        d_Y2s.append(d_Y2)
 
-            if flag:
-                Zs.append(Z)
-                Ys.append(get_response_list(Z, theta_stars))
-                d_Y = calculate_1d_wasserstein_distance(Y_stars, Ys[-1])
+plt.rcParams.update({'font.size': 20})
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(epsilons, d_Y1s, marker='o', linestyle='-', label='Y1s')
+ax.plot(epsilons, d_Y2s, marker='o', linestyle='-', label='Y2s')
+ax.set_title('Line Plot of d_Y1s and d_Y2s vs Epsilons')
+ax.set_xlabel('Epsilon')
+ax.set_ylabel('Values of d_Y1s and d_Y2s')
+ax.legend()
+ax.grid(True)
+plt.show()
 
-                f.write(f"\n\nDistance between Z* and Z_{i}: {float(d_Z)}")
-                f.write(f"\n\nDistance between Y* and Y_{i}: {float(d_Y)}")
 
-# plot_scatter(Z_stars, *Zs)
+
+plot_scatter(Z_star, Z1s[0], Z2s[0])

@@ -2,7 +2,6 @@ import numpy as np
 from scipy.stats import wasserstein_distance
 import ot
 import scipy as sp
-import pandas as pd
 import matplotlib.pyplot as plt
 
 def calculate_1d_wasserstein_distance(vector1, vector2, bins=30):
@@ -45,10 +44,11 @@ def calculate_3d_wasserstein_distance(matrix1, matrix2, n_samples):
         C1, C2, p, q, "square_loss", verbose=True, log=True
     )
 
-    return str(log0["gw_dist"])
+    return log0["gw_dist"]
 
 
 def plot_scatter(base_coef, perturb1_coef, perturb2_coef, axis_lim = False):
+    plt.rcParams.update({'font.size': 20})
     fig = plt.figure(figsize=(7, 7))
     ax = fig.add_subplot(111, projection='3d')
 
@@ -69,5 +69,7 @@ def plot_scatter(base_coef, perturb1_coef, perturb2_coef, axis_lim = False):
     ax.legend()
     plt.show()
 
-# if __name__ == "__main__":
+if __name__ == "__main__":
+    print(calculate_1d_wasserstein_distance([1, 2, 3], [4, 5, 6]))
+    # print(wd(np.array([1, 2, 3]), np.array([4, 5, 6])))
     
