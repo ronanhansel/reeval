@@ -62,6 +62,8 @@ epsilons = [i * 0.001 for i in range(1, 11)]
 # epsilons = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0]
 Z1s = []
 Z2s = []
+d_Z1s = []
+d_Z2s = []
 d_Y1s = []
 d_Y2s = []
 with open("./synthetic/Wasserstein_Distance.txt", "w", encoding="utf-8") as f:
@@ -75,6 +77,7 @@ with open("./synthetic/Wasserstein_Distance.txt", "w", encoding="utf-8") as f:
         f.write(f"Distance between Z* and Z1: {d_Z1}")
         f.write(f"Distance between Y* and Y1: {d_Y1}")
         Z1s.append(Z1)
+        d_Z1s.append(d_Z1)
         d_Y1s.append(d_Y1)
 
         Z2, d_Z2 = generate_perturb(Z_star, epsilon, n_questions)
@@ -83,19 +86,18 @@ with open("./synthetic/Wasserstein_Distance.txt", "w", encoding="utf-8") as f:
         f.write(f"Distance between Z* and Z2: {d_Z2}")
         f.write(f"Distance between Y* and Y2: {d_Y2}")
         Z2s.append(Z2)
+        d_Z2s.append(d_Z2)
         d_Y2s.append(d_Y2)
 
 plt.rcParams.update({'font.size': 20})
 fig, ax = plt.subplots(figsize=(10, 6))
-ax.plot(epsilons, d_Y1s, marker='o', linestyle='-', label='Y1s')
-ax.plot(epsilons, d_Y2s, marker='o', linestyle='-', label='Y2s')
-ax.set_title('Line Plot of d_Y1s and d_Y2s vs Epsilons')
-ax.set_xlabel('Epsilon')
+ax.plot(d_Z1s, d_Y1s, marker='o', linestyle='-', label='Y1s')
+ax.plot(d_Z2s, d_Y2s, marker='o', linestyle='-', label='Y2s')
+ax.set_title('Line Plot of d_Y1s and d_Y2s vs d_Z1s and d_Z2s')
+ax.set_xlabel('d_Z')
 ax.set_ylabel('Values of d_Y1s and d_Y2s')
 ax.legend()
 ax.grid(True)
 plt.show()
 
-
-
-plot_scatter(Z_star, Z1s[0], Z2s[0])
+# plot_scatter(Z_star, Z1s[0], Z2s[0])

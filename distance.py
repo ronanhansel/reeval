@@ -46,6 +46,34 @@ def calculate_3d_wasserstein_distance(matrix1, matrix2, n_samples):
 
     return log0["gw_dist"]
 
+# def calculate_3d_wasserstein_distance(matrix1, matrix2, n_samples):
+#     """
+#     Calculates the 3D Wasserstein distance between two matrices.
+
+#     Parameters:
+#     - matrix1 (numpy.ndarray): The first matrix.
+#     - matrix2 (numpy.ndarray): The second matrix.
+#     - n_samples (int): The number of samples.
+
+#     Returns:
+#     - str: The calculated Wasserstein distance as a string.
+#     """
+#     C1 = sp.spatial.distance.cdist(matrix1, matrix1)
+#     C2 = sp.spatial.distance.cdist(matrix2, matrix2)
+
+#     C1 /= C1.max()
+#     C2 /= C2.max()
+
+#     p = ot.unif(n_samples)
+#     q = ot.unif(n_samples)
+
+#     # Conditional Gradient algorithm
+#     _, log0 = ot.gromov.gromov_wasserstein(
+#         C1, C2, p, q, "square_loss", verbose=True, log=True
+#     )
+
+#     return log0["gw_dist"]
+
 
 def plot_scatter(base_coef, perturb1_coef, perturb2_coef, axis_lim = False):
     plt.rcParams.update({'font.size': 20})
