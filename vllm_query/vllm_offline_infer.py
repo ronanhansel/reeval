@@ -47,37 +47,37 @@ for j in range(start-1, end):
         row_list.append([airbench[i]["cate-idx"], airbench[i]["l2-name"], airbench[i]["l3-name"], airbench[i]["l4-name"]])
         prompts.append(airbench[i]["prompt"])
 
-    # sampling_params = SamplingParams(temperature=0, max_tokens=128)
-    # llm = LLM(model="meta-llama/Meta-Llama-3-8B-Instruct")
-    # outputs = llm.generate(prompts, sampling_params)
+    sampling_params = SamplingParams(temperature=0, max_tokens=128)
+    llm = LLM(model="meta-llama/Meta-Llama-3-8B-Instruct")
+    outputs = llm.generate(prompts, sampling_params)
 
-    # question_list = []
-    # row_list_2 = []
-    # for i, row in enumerate(row_list):
-    #     cate_idx = row[0]
-    #     prompt = outputs[i].prompt
-    #     answer = outputs[i].outputs[0].text
-    #     row_list_2.append([prompt, answer])
+    question_list = []
+    row_list_2 = []
+    for i, row in enumerate(row_list):
+        cate_idx = row[0]
+        prompt = outputs[i].prompt
+        answer = outputs[i].outputs[0].text
+        row_list_2.append([prompt, answer])
 
-    #     for data in judge_prompts:
-    #         if data['cate-idx'] == cate_idx:
-    #             judge_prompt = data['judge_prompt']
+        for data in judge_prompts:
+            if data['cate-idx'] == cate_idx:
+                judge_prompt = data['judge_prompt']
         
-    #     question_list.append(judge_prompt.replace("{{QUESTION}}", prompt).replace("{{ANSWER}}", answer))
+        question_list.append(judge_prompt.replace("{{QUESTION}}", prompt).replace("{{ANSWER}}", answer))
 
-    # result_list = batcher.handle_message_list(question_list)
-    # reason_list = [extract_content("##short_reasoning: ", result) for result in result_list]
-    # score_list = [float(extract_content("##the_score: ", result)) for result in result_list]
+    result_list = batcher.handle_message_list(question_list)
+    reason_list = [extract_content("##short_reasoning: ", result) for result in result_list]
+    score_list = [float(extract_content("##the_score: ", result)) for result in result_list]
 
-    # with open(f'result.csv', 'w', newline='', encoding='utf-8') as outfile:
-    #     writer = csv.writer(outfile)
-    #     writer.writerow(['cate-idx', 'l2-name', 'l3-name', 'l4-name', 'prompt', 'response','score_reason', 'score'])
+    with open(f'result.csv', 'w', newline='', encoding='utf-8') as outfile:
+        writer = csv.writer(outfile)
+        writer.writerow(['cate-idx', 'l2-name', 'l3-name', 'l4-name', 'prompt', 'response','score_reason', 'score'])
 
-    #     for i, row in enumerate(row_list):
-    #         cate_idx, l2_name, l3_name, l4_name = row
-    #         prompt = row_list_2[i][0]
-    #         response = row_list_2[i][1]
-    #         reason = reason_list[i]
-    #         score = score_list[i]
+        for i, row in enumerate(row_list):
+            cate_idx, l2_name, l3_name, l4_name = row
+            prompt = row_list_2[i][0]
+            response = row_list_2[i][1]
+            reason = reason_list[i]
+            score = score_list[i]
 
-    #         writer.writerow([cate_idx, l2_name, l3_name, l4_name, prompt, response, reason, score])
+            writer.writerow([cate_idx, l2_name, l3_name, l4_name, prompt, response, reason, score])
