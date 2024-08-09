@@ -1,0 +1,15 @@
+1PL
+Distance between base_matrix and perturb1_matrix: 0.002417347364535014
+Distance between base_matrix and perturb2_matrix: 0.0037035525047385527
+Distance between perturb1_matrix and perturb2_matrix: 0.002638149020760972
+
+2PL
+Distance between base_matrix and perturb1_matrix: 0.009688786446781577
+Distance between base_matrix and perturb2_matrix: 0.007856541331483422
+Distance between perturb1_matrix and perturb2_matrix: 0.008920355132768216
+
+3PL
+Distance between base_matrix and perturb1_matrix: 0.002677500240335344
+Distance between base_matrix and perturb2_matrix: 0.0060603211828415045
+Distance between perturb1_matrix and perturb2_matrix: 0.006297428818683532
+

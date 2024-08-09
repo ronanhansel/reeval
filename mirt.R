@@ -42,6 +42,4 @@ for (i in 1:length(input_files)) {
   }
 }
 
-# summary(model)
-# plot(model)
 
