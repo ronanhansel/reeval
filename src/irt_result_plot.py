@@ -33,29 +33,29 @@ if __name__ == "__main__":
     plt.rcParams.update({'font.size': 20})
 
     # run mirt.R
-    # subprocess.run("conda run -n R Rscript fit_irt.R", shell=True, check=True)
+    subprocess.run("conda run -n R Rscript fit_irt.R", shell=True, check=True)
     
     # clean up item parameters inferred from IRT
     perturb_list = ["base", "perturb1", "perturb2"]
     model_list = ["1PL", "2PL","3PL"]
 
-    # for perturb in perturb_list:
-    #     for model in model_list:
-    #         df = pd.read_csv(f'../data/real/irt_result/Z/{perturb}_{model}_Z.csv')
+    for perturb in perturb_list:
+        for model in model_list:
+            df = pd.read_csv(f'../data/real/irt_result/Z/{perturb}_{model}_Z.csv')
 
-    #         # delete column
-    #         df = df.iloc[:, 1:-2]
+            # delete column
+            df = df.iloc[:, 1:-2]
 
-    #         # overleaf/R_library: z1/g, z2/a1, z3/d
-    #         new_columns = ['z2', 'z3', 'z1', 'u']
-    #         data = {col: [] for col in new_columns}
-    #         for i in range(0, len(df.columns), 4):
-    #             for col, new_col in zip(df.columns[i:i+4], new_columns):
-    #                 data[new_col].append(df[col].values[0])
+            # overleaf/R_library: z1/g, z2/a1, z3/d
+            new_columns = ['z2', 'z3', 'z1', 'u']
+            data = {col: [] for col in new_columns}
+            for i in range(0, len(df.columns), 4):
+                for col, new_col in zip(df.columns[i:i+4], new_columns):
+                    data[new_col].append(df[col].values[0])
 
-    #         new_df = pd.DataFrame(data)
-    #         new_df = new_df[['z1', 'z2', 'z3']]
-    #         new_df.to_csv(f'../data/real/irt_result/Z/{perturb}_{model}_Z_clean.csv', index=False)
+            new_df = pd.DataFrame(data)
+            new_df = new_df[['z1', 'z2', 'z3']]
+            new_df.to_csv(f'../data/real/irt_result/Z/{perturb}_{model}_Z_clean.csv', index=False)
 
 
 
