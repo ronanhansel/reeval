@@ -1,7 +1,3 @@
-# install.packages("mirt")
-# install.packages("ggplot2")
-# install.packages("dplyr")
-
 library(mirt)
 library(ggplot2)
 library(dplyr)

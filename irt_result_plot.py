@@ -1,13 +1,17 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import subprocess
 # from tueplots import bundles
 # bundles.icml2022()
 # bundles.icml2022(family="sans-serif", usetex=False, column="full", nrows=2)
 # plt.rcParams.update(bundles.icml2022())
 
 if __name__ == "__main__":
-    os.cmd("Rscript R/mirt.R")
+    # run mirt.R
+    subprocess.run("conda activate R", shell=True, check=True, executable="/bin/bash")
+    subprocess.run("Rscript mirt.R", shell=True, check=True)
     
+    # clean irt_reslult theta
     perturb_list = ["base", "perturb1", "perturb2"]
     model_list = ["1PL", "2PL","3PL"]
 
