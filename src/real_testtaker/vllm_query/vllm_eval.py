@@ -23,7 +23,7 @@ if __name__ == "__main__":
     load_dotenv()
     hf_token = os.getenv('HF_TOKEN')
 
-    os.makedirs("../data/real/pre_irt_data/eval", exist_ok=True)
+    os.makedirs("../../../data/real/pre_irt_data/eval", exist_ok=True)
 
     parser = argparse.ArgumentParser(description='get eval score using get-as-a-judge')
     parser.add_argument('--start', type=int, required=True, help='Start index')
@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
     for model_string in subset_model_string_list:
         model_string = model_string.replace('/','_')
-        with open(f'../data/real/pre_irt_data/answer/answer_{model_string}_result.csv', 'r', newline='', encoding='utf-8') as infile:
+        with open(f'../../../data/real/pre_irt_data/answer/answer_{model_string}_result.csv', 'r', newline='', encoding='utf-8') as infile:
             reader = csv.reader(infile)
             header = next(reader)
             row_list = [row for row in reader]
@@ -72,7 +72,7 @@ if __name__ == "__main__":
         reason_list = [extract_content("##short_reasoning: ", result) for result in result_list]
         score_list = [float(extract_content("##the_score: ", result)) for result in result_list]
 
-        with open(f'../data/real/pre_irt_data/eval/eval_{model_string}_result.csv', 'w', newline='', encoding='utf-8') as outfile:
+        with open(f'../../../data/real/pre_irt_data/eval/eval_{model_string}_result.csv', 'w', newline='', encoding='utf-8') as outfile:
             writer = csv.writer(outfile)
             writer.writerow(['cate-idx', 'l2-name', 'l3-name', 'l4-name', 'prompt', 'response', 'score_reason', 'score'])
 

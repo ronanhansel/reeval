@@ -2,7 +2,7 @@ import pandas as pd
 import os
 
 if __name__ == "__main__":
-    input_dir = "../data/real/pre_irt_data/eval"
+    input_dir = "../../../data/real/pre_irt_data/eval"
     perturb_list = ["base", "perturb1", "perturb2"]
     i = 0
 
@@ -30,5 +30,5 @@ if __name__ == "__main__":
         matrix_df.reset_index(drop=True, inplace=True)
         matrix_df = matrix_df.T
         
-        matrix_df.to_csv(f'../data/real/response_matrix/{perturb}_matrix.csv')
+        matrix_df.to_csv(f'../../../data/real/response_matrix/{perturb}_matrix.csv')
         i += 1

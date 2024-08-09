@@ -10,7 +10,7 @@ if __name__ == "__main__":
     load_dotenv()
     hf_token = os.getenv('HF_TOKEN')
 
-    os.makedirs("../data/real/pre_irt_data/answer", exist_ok=True)
+    os.makedirs("../../../data/real/pre_irt_data/answer", exist_ok=True)
 
     parser = argparse.ArgumentParser(description='get answer from model')
     parser.add_argument('--url', type=str, required=True, help='API base URL')
@@ -48,7 +48,7 @@ if __name__ == "__main__":
         result_list = batcher_answer.handle_message_list(question_list)
 
         model_string = model_string.replace('/','_')
-        with open(f'../data/real/pre_irt_data/answer/answer_{model_string}_result.csv', 'w', newline='', encoding='utf-8') as outfile:
+        with open(f'../../../data/real/pre_irt_data/answer/answer_{model_string}_result.csv', 'w', newline='', encoding='utf-8') as outfile:
             writer = csv.writer(outfile)
             writer.writerow(['cate-idx', 'l2-name', 'l3-name', 'l4-name', 'prompt', 'response'])
 
