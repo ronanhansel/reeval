@@ -1,7 +1,11 @@
 .env
 *.pyc
+<<<<<<< HEAD
 __pycache__/*
 a.ipynb
 __pycache__/
 *.py[cod]
 *$py.class
+=======
+__pycache__/*
+>>>>>>> master
