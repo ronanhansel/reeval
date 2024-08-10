@@ -6,7 +6,7 @@ import torch
 import numpy as np
 import sys
 import os
-from utils import item_response_fn_1PL
+from utils import item_response_fn_1PL, calculate_3d_wasserstein_distance, calculate_1d_wasserstein_distance
 import argparse
 # from tueplots import bundles
 # bundles.icml2022()
@@ -85,6 +85,8 @@ if __name__ == "__main__":
     ax.legend()
     plt.savefig('../plot/real/3d3pl.png')
 
+
+
     # plot Z distribution (density histogram)
     for i, model in enumerate(model_list):
         base_coef = pd.read_csv(f'../data/real/irt_result/Z/base_{model}_Z_clean.csv')
@@ -110,6 +112,61 @@ if __name__ == "__main__":
         plot_hist(9, perturb2_value[2], 'b', 'z3', 'perturb2')   
 
         plt.savefig(f'../plot/real/iparams{i+1}pl.png')
+
+
+
+    # 1D Wasserstein Distance
+    with open("../plot/real/1D_Wasserstein_Distance.txt", "w", encoding="utf-8") as f:
+        for model in model_list:
+            f.write(f"{model}\n")
+            base_path = f"../data/real/irt_result/Z/base_{model}_Z_clean.csv"
+            perturb1_path = f"../data/real/irt_result/Z/perturb1_{model}_Z_clean.csv"
+            perturb2_path = f"../data/real/irt_result/Z/perturb2_{model}_Z_clean.csv"
+
+            para_list =  ['z1', 'z2', 'z3']
+            for para in para_list:
+                base_coef = pd.read_csv(base_path, usecols=[para])
+                perturb1_coef = pd.read_csv(perturb1_path, usecols=[para])
+                perturb2_coef = pd.read_csv(perturb2_path, usecols=[para])
+
+                distance_1_2 = calculate_1d_wasserstein_distance(base_coef, perturb1_coef)
+                distance_1_3 = calculate_1d_wasserstein_distance(base_coef, perturb2_coef)
+                distance_2_3 = calculate_1d_wasserstein_distance(perturb1_coef, perturb2_coef)
+                
+                f.write(f"Parameter {para}\n")
+                f.write(f"Distance between base and perturb1: {distance_1_2}\n")
+                f.write(f"Distance between base and perturb2: {distance_1_3}\n")
+                f.write(f"Distance between perturb1 and perturb2: {distance_2_3}\n")
+                f.write("\n")
+            
+
+
+    # 3D Wasserstein Distance of Z
+    with open("../plot/real/3D_Wasserstein_Distance.txt", "w", encoding="utf-8") as f:
+        for model in model_list:
+            f.write(f"{model}\n")
+
+            base_path = f"../data/real/irt_result/Z/base_{model}_Z_clean.csv"
+            perturb1_path = f"../data/real/irt_result/Z/perturb1_{model}_Z_clean.csv"
+            perturb2_path = f"../data/real/irt_result/Z/perturb2_{model}_Z_clean.csv"
+
+            base_matrix = pd.read_csv(base_path).values
+            perturb1_matrix = pd.read_csv(perturb1_path).values
+            perturb2_matrix = pd.read_csv(perturb2_path).values
+            
+            min_size = min(base_matrix.shape[0], perturb1_matrix.shape[0], perturb2_matrix.shape[0])
+            base_matrix = base_matrix[:min_size, :]
+            perturb1_matrix = perturb1_matrix[:min_size, :]
+            perturb2_matrix = perturb2_matrix[:min_size, :]
+
+            distance_1_2 = calculate_3d_wasserstein_distance(base_matrix, perturb1_matrix, min_size)
+            distance_1_3 = calculate_3d_wasserstein_distance(base_matrix, perturb2_matrix, min_size)
+            distance_2_3 = calculate_3d_wasserstein_distance(perturb1_matrix, perturb2_matrix, min_size)
+
+            f.write(f"Distance between base_matrix and perturb1_matrix: {distance_1_2}\n")
+            f.write(f"Distance between base_matrix and perturb2_matrix: {distance_1_3}\n")
+            f.write(f"Distance between perturb1_matrix and perturb2_matrix: {distance_2_3}\n")
+            f.write("\n")
 
 
 

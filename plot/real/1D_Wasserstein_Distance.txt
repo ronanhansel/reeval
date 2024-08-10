@@ -1,0 +1,48 @@
+1PL
+Parameter z1
+Distance between base and perturb1: 0.0
+Distance between base and perturb2: 0.0
+Distance between perturb1 and perturb2: 0.0
+
+Parameter z2
+Distance between base and perturb1: 0.0
+Distance between base and perturb2: 0.0
+Distance between perturb1 and perturb2: 0.0
+
+Parameter z3
+Distance between base and perturb1: 0.5858407882675091
+Distance between base and perturb2: 0.29240434242962815
+Distance between perturb1 and perturb2: 0.6194444008801983
+
+2PL
+Parameter z1
+Distance between base and perturb1: 0.0
+Distance between base and perturb2: 0.0
+Distance between perturb1 and perturb2: 0.0
+
+Parameter z2
+Distance between base and perturb1: 1.2442985985391817
+Distance between base and perturb2: 1.5449041737106752
+Distance between perturb1 and perturb2: 1.334382363440814
+
+Parameter z3
+Distance between base and perturb1: 2.749887067512129
+Distance between base and perturb2: 2.7794821601338087
+Distance between perturb1 and perturb2: 1.6732293773880291
+
+3PL
+Parameter z1
+Distance between base and perturb1: 0.07320878097728581
+Distance between base and perturb2: 0.059011903323556214
+Distance between perturb1 and perturb2: 0.018372591307320888
+
+Parameter z2
+Distance between base and perturb1: 1.2306336450170565
+Distance between base and perturb2: 1.2066508559719893
+Distance between perturb1 and perturb2: 1.8480664514353846
+
+Parameter z3
+Distance between base and perturb1: 1.2628208565604395
+Distance between base and perturb2: 2.2475376214851304
+Distance between perturb1 and perturb2: 3.1271226998965456
+
