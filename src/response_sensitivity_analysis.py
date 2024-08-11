@@ -1,6 +1,5 @@
 from utils import calculate_1d_wasserstein_distance, calculate_3d_wasserstein_distance
 import numpy as np
-from scipy.stats import beta, lognorm, norm
 from utils import item_response_fn_1PL
 import torch
 import matplotlib.pyplot as plt
