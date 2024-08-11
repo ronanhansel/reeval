@@ -1,7 +1,0 @@
-.env
-*.pyc
-__pycache__/*
-a.ipynb
-__pycache__/
-*.py[cod]
-*$py.class
