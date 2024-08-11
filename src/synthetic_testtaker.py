@@ -71,7 +71,6 @@ if __name__ == "__main__":
     true_theta_df = pd.DataFrame(true_theta, columns=["true_theta"])
     true_theta_df.to_csv(os.path.join(save_dir, "true_theta.csv"), index=False)
     
-    # save Z
     Z_df = pd.DataFrame(Z.numpy(), columns=["z1", "z2", "z3"])
     Z_df.to_csv(os.path.join(save_dir, "true_Z.csv"), index=False)
     
