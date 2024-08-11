@@ -15,7 +15,6 @@ def item_response_fn_2PL(z2, z3, theta):
 def item_response_fn_1PL(z3, theta):
     return 1 / (1 + torch.exp(-(theta + z3)))
 
-
 def calculate_1d_wasserstein_distance(vector1, vector2):
     return wasserstein_distance(vector1, vector2)
 

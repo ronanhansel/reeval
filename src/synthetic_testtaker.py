@@ -5,7 +5,6 @@ from utils import item_response_fn_3PL
 import numpy as np
 from scipy.stats import beta, lognorm, norm
 from utils import item_response_fn_3PL
-import torch
 import matplotlib.pyplot as plt
 
 class SimulatedTestTaker():
@@ -39,7 +38,6 @@ if __name__ == "__main__":
     shape = 0.21631136362126255
     loc = -0.3077433473021994
     scale = 1.498526380109833
-
     z2 = lognorm.rvs(shape, loc, scale, size=question_num)
     
     loc = -0.44651776605570387
