@@ -49,3 +49,15 @@ if __name__ == "__main__":
     print(calculate_1d_wasserstein_distance([0, 1, 3], [5, 6, 8]))
     print(calculate_1d_wasserstein_distance([1, 1, 3], [5, 6, 8]))
     
+    mean_1 = 1
+    mean_2 = 3
+    size = 10000
+    diff = mean_2 - mean_1
+    
+    samples_1 = np.random.normal(loc=mean_1, scale=1, size=size)
+    samples_2 = np.random.normal(loc=mean_2, scale=1, size=size)
+    
+    wd = calculate_1d_wasserstein_distance(samples_1, samples_2)
+    print(f'Wasserstein Distance: {wd}')
+    print(f'error rate: {(wd - diff)/diff}')
+    
