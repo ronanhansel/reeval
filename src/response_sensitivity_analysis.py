@@ -5,13 +5,13 @@ from utils import item_response_fn_1PL
 import torch
 import matplotlib.pyplot as plt
 
-def get_response(Z, theta):
-    n_testtakers = theta.shape[0]
+def get_response(Z, theta_list):
+    n_testtakers = len(theta_list)
     n_questions = Z.shape[0]
     psolve = np.zeros((n_testtakers, n_questions))
 
     Z_tensor = torch.tensor(Z)
-    theta_tensor = torch.tensor(theta)
+    theta_tensor = torch.tensor(theta_list)
 
     for i in range(n_testtakers):
         for j in range(n_questions):
