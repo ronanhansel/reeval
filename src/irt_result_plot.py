@@ -8,6 +8,8 @@ import sys
 import os
 from utils import item_response_fn_1PL, calculate_3d_wasserstein_distance, calculate_1d_wasserstein_distance
 import argparse
+import csv
+from sklearn.metrics import mean_squared_error
 # from tueplots import bundles
 # bundles.icml2022()
 # bundles.icml2022(family="sans-serif", usetex=False, column="full", nrows=2)
@@ -30,40 +32,69 @@ if __name__ == "__main__":
     # args = parser.parse_args()
     # response_matrix_path = args.response_matrix_path
     
+    true_Z_path = f'../data/synthetic/response_matrix/true_Z.csv'
+    true_theta_path = f'../data/synthetic/response_matrix/true_theta.csv'
+
     experiment_type = 'synthetic'
+    Z_dir = f'../data/{experiment_type}/irt_result/Z/'
+    theta_dir = f'../data/{experiment_type}/irt_result/theta/'
     
     plt.rcParams.update({'font.size': 20})
 
     # # run mirt.R
     # subprocess.run("conda run -n R Rscript fit_irt.R real", shell=True, check=True)
     
-    # clean up item parameters inferred from IRT
-    Z_dir = f'../data/{experiment_type}/irt_result/Z/'
-    for filename in os.listdir(Z_dir):
-        if filename.endswith('.csv'):
-            file_path = os.path.join(Z_dir, filename)
-            df = pd.read_csv(file_path)
+    # # clean up item parameters inferred from IRT
+    # for filename in os.listdir(Z_dir):
+    #     if filename.endswith('.csv'):
+    #         file_path = os.path.join(Z_dir, filename)
+    #         df = pd.read_csv(file_path)
 
-            # Delete columns
-            df = df.iloc[:, 1:-2]
+    #         # Delete columns
+    #         df = df.iloc[:, 1:-2]
 
-            # Define new columns and prepare data
-            new_columns = ['z2', 'z3', 'z1', 'u']
-            data = {col: [] for col in new_columns}
-            for i in range(0, len(df.columns), 4):
-                for col, new_col in zip(df.columns[i:i+4], new_columns):
-                    data[new_col].append(df[col].values[0])
+    #         # Define new columns and prepare data
+    #         new_columns = ['z2', 'z3', 'z1', 'u']
+    #         data = {col: [] for col in new_columns}
+    #         for i in range(0, len(df.columns), 4):
+    #             for col, new_col in zip(df.columns[i:i+4], new_columns):
+    #                 data[new_col].append(df[col].values[0])
 
-            # Create a new DataFrame with the cleaned data
-            new_df = pd.DataFrame(data)
-            new_df = new_df[['z1', 'z2', 'z3']]
+    #         # Create a new DataFrame with the cleaned data
+    #         new_df = pd.DataFrame(data)
+    #         new_df = new_df[['z1', 'z2', 'z3']]
 
-            # Save the cleaned data to a new CSV file
-            clean_file_path = os.path.join(Z_dir, filename.replace('.csv', '_clean.csv'))
-            new_df.to_csv(clean_file_path, index=False)
-
+    #         # Save the cleaned data to a new CSV file
+    #         clean_file_path = os.path.join(Z_dir, filename.replace('.csv', '_clean.csv'))
+    #         new_df.to_csv(clean_file_path, index=False)
 
 
+
+    # synthetic mse of Z and theta
+    mse_output_path = '../plot/synthetic/mse.txt'
+    with open(mse_output_path, 'w') as f:
+        f.write('MSE of Z\n')
+        for filename in os.listdir(Z_dir):
+            if filename.endswith('_clean.csv'):
+                synthetic_Z_path = os.path.join(Z_dir, filename)
+                synthetic_Z = pd.read_csv(synthetic_Z_path).values
+                true_Z = pd.read_csv(true_Z_path).values
+                mse_Z = mean_squared_error(true_Z, synthetic_Z)
+                model = filename.split('_Z_clean.csv')[0].split('synthetic_')[1]
+                f.write(f'{model}: {mse_Z}\n')
+                    
+        f.write('\n\n\nMSE of theta\n')
+        for filename in os.listdir(theta_dir):
+            if filename.endswith('.csv'):
+                synthetic_theta_path = os.path.join(theta_dir, filename)
+                synthetic_theta = pd.read_csv(synthetic_theta_path).values[:, -1]
+                true_theta = pd.read_csv(true_theta_path).values[:, -1]
+                mse_theta = mean_squared_error(true_theta, synthetic_theta)
+                model = filename.split('_theta.csv')[0].split('synthetic_')[1]
+                f.write(f'{model}: {mse_theta}\n')
+
+    
+    
     # # 3D plot of [z1, z2, z3], only 3PL
     # base_coef = pd.read_csv(f'../data/real/irt_result/Z/base_3PL_Z_clean.csv')
     # perturb1_coef = pd.read_csv(f'../data/real/irt_result/Z/perturb1_3PL_Z_clean.csv')
