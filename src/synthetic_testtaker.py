@@ -1,21 +1,30 @@
 import os
 import pandas as pd
 import torch
-from utils import item_response_fn_3PL
+from utils import item_response_fn_3PL, item_response_fn_2PL, item_response_fn_1PL
 import numpy as np
 from scipy.stats import beta, lognorm, norm
-from utils import item_response_fn_3PL
-import matplotlib.pyplot as plt
 
 class SimulatedTestTaker():
-    def __init__(self, Z):
+    def __init__(self, Z, model="3PL"):
         self.ability = torch.normal(mean=0.0, std=1.0, size=(1,))
+        # self.ability = torch.tensor(2) # for testing
         self.Z = Z
+        self.model = model
 
     def ask(self, question_index):
-        prob = item_response_fn_3PL(
-            *self.Z[question_index, :], self.ability
-        )
+        if self.model == "3PL":
+            prob = item_response_fn_3PL(
+                *self.Z[question_index, :], self.ability
+            )
+        elif self.model == "2PL":
+            prob = item_response_fn_2PL(
+                *self.Z[question_index, :], self.ability
+            )
+        elif self.model == "1PL":
+            prob = item_response_fn_1PL(
+                self.Z[question_index], self.ability
+            )
         bernoulli = torch.distributions.Bernoulli(prob)
         return bernoulli.sample()
     
