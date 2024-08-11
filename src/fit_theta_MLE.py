@@ -9,11 +9,11 @@ def fit_theta(Z, asked_question_list, asked_answer_list, epoch=300):
     optimizer = optim.Adam([theta_hat], lr=0.01)
     for _ in range(epoch):
         log_prob = 0
-        for i, asked_question_index in enumerate(asked_question_list):
+        for asked_question_index in asked_question_list:
             # prob = item_response_fn_3PL(*Z[asked_question_index, :], theta_hat)
             prob = item_response_fn_1PL(Z[asked_question_index], theta_hat)
             bernoulli = torch.distributions.Bernoulli(prob)
-            log_prob = log_prob + bernoulli.log_prob(asked_answer_list[i].float())
+            log_prob = log_prob + bernoulli.log_prob(asked_answer_list[asked_question_index].float())
         
         loss = -log_prob/len(asked_question_list)
         loss.backward()

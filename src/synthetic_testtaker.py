@@ -4,13 +4,21 @@ import torch
 from utils import item_response_fn_3PL, item_response_fn_2PL, item_response_fn_1PL
 import numpy as np
 from scipy.stats import beta, lognorm, norm
+import jax.random as random
 
 class SimulatedTestTaker():
-    def __init__(self, Z, model="3PL"):
-        self.ability = torch.normal(mean=0.0, std=1.0, size=(1,))
+    def __init__(self, Z, model="3PL", datatype="torch"):
         # self.ability = torch.tensor(2) # for testing
         self.Z = Z
         self.model = model
+        self.datatype = datatype
+    
+        if self.datatype == "torch":
+            self.ability = torch.normal(mean=0.0, std=1.0, size=(1,))
+        elif self.datatype == "numpy":
+            self.ability = np.random.normal(loc=0.0, scale=1.0, size=(1,))
+        elif self.datatype == "jnp":
+            self.ability = random.normal(random.PRNGKey(42), shape=(1,))
 
     def ask(self, question_index):
         if self.model == "3PL":
@@ -23,10 +31,15 @@ class SimulatedTestTaker():
             )
         elif self.model == "1PL":
             prob = item_response_fn_1PL(
-                self.Z[question_index], self.ability
+                self.Z[question_index], self.ability, datatype=self.datatype
             )
-        bernoulli = torch.distributions.Bernoulli(prob)
-        return bernoulli.sample()
+            
+        if self.datatype == "torch":
+            return torch.distributions.Bernoulli(prob).sample()
+        elif self.datatype == "numpy":
+            return np.random.binomial(n=1, p=prob)
+        elif self.datatype == "jnp":
+            return random.bernoulli(random.PRNGKey(42), prob)
     
     def get_ability(self):
         return self.ability
