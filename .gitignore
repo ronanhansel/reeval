@@ -5,3 +5,8 @@ a.ipynb
 __pycache__/
 *.py[cod]
 *$py.class
+data/
+plot/
+*.csv
+*.txt
+*.png
