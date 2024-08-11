@@ -40,6 +40,9 @@ if __name__ == "__main__":
     theta_dir = f'../data/{experiment_type}/irt_result/theta/'
     
     plt.rcParams.update({'font.size': 20})
+    
+    perturb_list = ["base", "perturb1", "perturb2"]
+    model_list = ["1PL", "2PL","3PL"]
 
     # # run mirt.R
     # subprocess.run("conda run -n R Rscript fit_irt.R real", shell=True, check=True)
@@ -70,28 +73,28 @@ if __name__ == "__main__":
 
 
 
-    # synthetic mse of Z and theta
-    mse_output_path = '../plot/synthetic/mse.txt'
-    with open(mse_output_path, 'w') as f:
-        f.write('MSE of Z\n')
-        for filename in os.listdir(Z_dir):
-            if filename.endswith('_clean.csv'):
-                synthetic_Z_path = os.path.join(Z_dir, filename)
-                synthetic_Z = pd.read_csv(synthetic_Z_path).values
-                true_Z = pd.read_csv(true_Z_path).values
-                mse_Z = mean_squared_error(true_Z, synthetic_Z)
-                model = filename.split('_Z_clean.csv')[0].split('synthetic_')[1]
-                f.write(f'{model}: {mse_Z}\n')
+    # # synthetic mse of Z and theta
+    # mse_output_path = '../plot/synthetic/mse.txt'
+    # with open(mse_output_path, 'w') as f:
+    #     f.write('MSE of Z\n')
+    #     for filename in os.listdir(Z_dir):
+    #         if filename.endswith('_clean.csv'):
+    #             synthetic_Z_path = os.path.join(Z_dir, filename)
+    #             synthetic_Z = pd.read_csv(synthetic_Z_path).values
+    #             true_Z = pd.read_csv(true_Z_path).values
+    #             mse_Z = mean_squared_error(true_Z, synthetic_Z)
+    #             model = filename.split('_Z_clean.csv')[0].split('synthetic_')[1]
+    #             f.write(f'{model}: {mse_Z}\n')
                     
-        f.write('\n\n\nMSE of theta\n')
-        for filename in os.listdir(theta_dir):
-            if filename.endswith('.csv'):
-                synthetic_theta_path = os.path.join(theta_dir, filename)
-                synthetic_theta = pd.read_csv(synthetic_theta_path).values[:, -1]
-                true_theta = pd.read_csv(true_theta_path).values[:, -1]
-                mse_theta = mean_squared_error(true_theta, synthetic_theta)
-                model = filename.split('_theta.csv')[0].split('synthetic_')[1]
-                f.write(f'{model}: {mse_theta}\n')
+    #     f.write('\n\n\nMSE of theta\n')
+    #     for filename in os.listdir(theta_dir):
+    #         if filename.endswith('.csv'):
+    #             synthetic_theta_path = os.path.join(theta_dir, filename)
+    #             synthetic_theta = pd.read_csv(synthetic_theta_path).values[:, -1]
+    #             true_theta = pd.read_csv(true_theta_path).values[:, -1]
+    #             mse_theta = mean_squared_error(true_theta, synthetic_theta)
+    #             model = filename.split('_theta.csv')[0].split('synthetic_')[1]
+    #             f.write(f'{model}: {mse_theta}\n')
 
     
     
@@ -161,9 +164,9 @@ if __name__ == "__main__":
 
     #         para_list =  ['z1', 'z2', 'z3']
     #         for para in para_list:
-    #             base_coef = pd.read_csv(base_path, usecols=[para])
-    #             perturb1_coef = pd.read_csv(perturb1_path, usecols=[para])
-    #             perturb2_coef = pd.read_csv(perturb2_path, usecols=[para])
+    #             base_coef = pd.read_csv(base_path, usecols=[para]).values.flatten()
+    #             perturb1_coef = pd.read_csv(perturb1_path, usecols=[para]).values.flatten()
+    #             perturb2_coef = pd.read_csv(perturb2_path, usecols=[para]).values.flatten()
 
     #             distance_1_2 = calculate_1d_wasserstein_distance(base_coef, perturb1_coef)
     #             distance_1_3 = calculate_1d_wasserstein_distance(base_coef, perturb2_coef)
@@ -177,32 +180,32 @@ if __name__ == "__main__":
             
 
 
-    # # 3D Wasserstein Distance of Z
-    # with open("../plot/real/3D_Wasserstein_Distance.txt", "w", encoding="utf-8") as f:
-    #     for model in model_list:
-    #         f.write(f"{model}\n")
+    # 3D Wasserstein Distance of Z
+    with open("../plot/real/3D_Wasserstein_Distance.txt", "w", encoding="utf-8") as f:
+        for model in model_list:
+            f.write(f"{model}\n")
 
-    #         base_path = f"../data/real/irt_result/Z/base_{model}_Z_clean.csv"
-    #         perturb1_path = f"../data/real/irt_result/Z/perturb1_{model}_Z_clean.csv"
-    #         perturb2_path = f"../data/real/irt_result/Z/perturb2_{model}_Z_clean.csv"
+            base_path = f"../data/real/irt_result/Z/base_{model}_Z_clean.csv"
+            perturb1_path = f"../data/real/irt_result/Z/perturb1_{model}_Z_clean.csv"
+            perturb2_path = f"../data/real/irt_result/Z/perturb2_{model}_Z_clean.csv"
 
-    #         base_matrix = pd.read_csv(base_path).values
-    #         perturb1_matrix = pd.read_csv(perturb1_path).values
-    #         perturb2_matrix = pd.read_csv(perturb2_path).values
+            base_matrix = pd.read_csv(base_path).values
+            perturb1_matrix = pd.read_csv(perturb1_path).values
+            perturb2_matrix = pd.read_csv(perturb2_path).values
             
-    #         min_size = min(base_matrix.shape[0], perturb1_matrix.shape[0], perturb2_matrix.shape[0])
-    #         base_matrix = base_matrix[:min_size, :]
-    #         perturb1_matrix = perturb1_matrix[:min_size, :]
-    #         perturb2_matrix = perturb2_matrix[:min_size, :]
+            # min_size = min(base_matrix.shape[0], perturb1_matrix.shape[0], perturb2_matrix.shape[0])
+            # base_matrix = base_matrix[:min_size, :]
+            # perturb1_matrix = perturb1_matrix[:min_size, :]
+            # perturb2_matrix = perturb2_matrix[:min_size, :]
 
-    #         distance_1_2 = calculate_3d_wasserstein_distance(base_matrix, perturb1_matrix, min_size)
-    #         distance_1_3 = calculate_3d_wasserstein_distance(base_matrix, perturb2_matrix, min_size)
-    #         distance_2_3 = calculate_3d_wasserstein_distance(perturb1_matrix, perturb2_matrix, min_size)
+            distance_1_2 = calculate_3d_wasserstein_distance(base_matrix, perturb1_matrix)
+            distance_1_3 = calculate_3d_wasserstein_distance(base_matrix, perturb2_matrix)
+            distance_2_3 = calculate_3d_wasserstein_distance(perturb1_matrix, perturb2_matrix)
 
-    #         f.write(f"Distance between base_matrix and perturb1_matrix: {distance_1_2}\n")
-    #         f.write(f"Distance between base_matrix and perturb2_matrix: {distance_1_3}\n")
-    #         f.write(f"Distance between perturb1_matrix and perturb2_matrix: {distance_2_3}\n")
-    #         f.write("\n")
+            f.write(f"Distance between base_matrix and perturb1_matrix: {distance_1_2}\n")
+            f.write(f"Distance between base_matrix and perturb2_matrix: {distance_1_3}\n")
+            f.write(f"Distance between perturb1_matrix and perturb2_matrix: {distance_2_3}\n")
+            f.write("\n")
 
 
 
