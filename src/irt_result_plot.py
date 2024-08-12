@@ -4,11 +4,9 @@ import matplotlib.pyplot as plt
 import subprocess
 import torch
 import numpy as np
-import sys
 import os
 from utils import item_response_fn_1PL, calculate_3d_wasserstein_distance, calculate_1d_wasserstein_distance
 import argparse
-import csv
 from sklearn.metrics import mean_squared_error
 # from tueplots import bundles
 # bundles.icml2022()

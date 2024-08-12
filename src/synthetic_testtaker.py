@@ -4,13 +4,13 @@ import torch
 from utils import item_response_fn_3PL, item_response_fn_2PL, item_response_fn_1PL
 import numpy as np
 from scipy.stats import beta, lognorm, norm
+import jax
 
 class SimulatedTestTaker():
     def __init__(self, Z, model="3PL"):
-        self.ability = torch.normal(mean=0.0, std=1.0, size=(1,))
-        # self.ability = torch.tensor(2) # for testing
         self.Z = Z
         self.model = model
+        self.ability = torch.normal(mean=0.0, std=1.0, size=(1,))
 
     def ask(self, question_index):
         if self.model == "3PL":
@@ -25,8 +25,7 @@ class SimulatedTestTaker():
             prob = item_response_fn_1PL(
                 self.Z[question_index], self.ability
             )
-        bernoulli = torch.distributions.Bernoulli(prob)
-        return bernoulli.sample()
+        return torch.distributions.Bernoulli(prob).sample()
     
     def get_ability(self):
         return self.ability

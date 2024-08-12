@@ -1,9 +1,7 @@
 import torch
 import numpy as np
 from scipy.stats import wasserstein_distance, wasserstein_distance_nd
-import ot
-import scipy as sp
-import matplotlib.pyplot as plt
+import jax.numpy as jnp
 
 # overleaf/R_library: z1/g, z2/a1, z3/d
 def item_response_fn_3PL(z1, z2, z3, theta):
