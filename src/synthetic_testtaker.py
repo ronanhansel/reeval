@@ -7,23 +7,25 @@ from scipy.stats import beta, lognorm, norm
 import jax
 
 class SimulatedTestTaker():
-    def __init__(self, Z, model="3PL"):
-        self.Z = Z
+    def __init__(self, theta=None, model="3PL"):
         self.model = model
-        self.ability = torch.normal(mean=0.0, std=1.0, size=(1,))
+        if theta==None:
+            self.ability = torch.normal(mean=0.0, std=1.0, size=(1,))
+        else:
+            self.ability = theta
 
-    def ask(self, question_index):
+    def ask(self, Z, question_index):
         if self.model == "3PL":
             prob = item_response_fn_3PL(
-                *self.Z[question_index, :], self.ability
+                *Z[question_index, :], self.ability
             )
         elif self.model == "2PL":
             prob = item_response_fn_2PL(
-                *self.Z[question_index, :], self.ability
+                *Z[question_index, :], self.ability
             )
         elif self.model == "1PL":
             prob = item_response_fn_1PL(
-                self.Z[question_index], self.ability
+                Z[question_index], self.ability
             )
         return torch.distributions.Bernoulli(prob).sample()
     
@@ -61,11 +63,11 @@ if __name__ == "__main__":
     response_matrix = np.zeros((testtaker_num, question_num))
     true_theta = np.zeros(testtaker_num)
     for i in range(testtaker_num):
-        new_testtaker = SimulatedTestTaker(Z)
+        new_testtaker = SimulatedTestTaker()
         true_theta[i] = new_testtaker.get_ability().item()
         
         for j in range(question_num):
-            response_matrix[i, j] = new_testtaker.ask(j).item()
+            response_matrix[i, j] = new_testtaker.ask(Z, j).item()
             
     save_dir = "../data/synthetic/response_matrix/"
     os.makedirs(save_dir, exist_ok=True)

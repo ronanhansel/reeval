@@ -10,8 +10,15 @@ def item_response_fn_3PL(z1, z2, z3, theta):
 def item_response_fn_2PL(z2, z3, theta):
     return 1 / (1 + torch.exp(-(z2 * theta + z3)))
 
-def item_response_fn_1PL(z3, theta):
-    return 1 / (1 + torch.exp(-(theta + z3)))
+def item_response_fn_1PL(z3, theta, datatype="torch"):
+    if datatype == "torch":
+        return 1 / (1 + torch.exp(-(theta + z3)))
+    elif datatype == "numpy":
+        return 1 / (1 + np.exp(-(theta + z3)))
+    elif datatype == "jnp":
+        return 1 / (1 + jnp.exp(-(theta + z3)))
+    else:
+        raise ValueError("datatype should be 'torch' or 'numpy' or 'jnp'")
 
 def calculate_1d_wasserstein_distance(vector1, vector2):
     return wasserstein_distance(vector1, vector2)

@@ -4,7 +4,6 @@ from numpyro.infer import MCMC, NUTS
 import jax.numpy as jnp
 import jax.random as random
 from utils import item_response_fn_1PL
-from synthetic_testtaker import SimulatedTestTaker
 from numpyro.diagnostics import hpdi
 import torch
 import torch.optim as optim
@@ -36,7 +35,7 @@ def model(Z, asked_question_list, asked_answer_list):
     probs = item_response_fn_1PL(Z_asked, theta_hat, datatype="jnp")
     numpyro.sample("obs", dist.Bernoulli(probs), obs=asked_answer_list)
 
-def fit_theta_mcmc(Z, asked_question_list, asked_answer_list, num_samples=2000, num_warmup=1000):
+def fit_theta_mcmc(Z, asked_question_list, asked_answer_list, num_samples=9000, num_warmup=1000):
     rng_key = random.PRNGKey(0)
     rng_key, rng_key_ = random.split(rng_key)
     
@@ -52,24 +51,24 @@ def fit_theta_mcmc(Z, asked_question_list, asked_answer_list, num_samples=2000, 
     
     theta_samples = mcmc.get_samples()["theta_hat"]
     mean_theta = jnp.mean(theta_samples)
-    variance_theta = jnp.var(theta_samples)
-    hpdi_theta = hpdi(theta_samples, 0.9)
+    std_theta = jnp.std(theta_samples)
+    # hpdi_theta = hpdi(theta_samples, 0.9)
 
-    return mean_theta, variance_theta, hpdi_theta
+    return mean_theta, std_theta
 
 if __name__ == "__main__":
     torch.manual_seed(10)
     question_num = 1000
 
     z3 = torch.normal(mean=0.0, std=1.0, size=(question_num,))
-    new_testtaker = SimulatedTestTaker(z3, model="1PL")
+    new_testtaker = SimulatedTestTaker(model="1PL")
     theta_star = new_testtaker.get_ability()
     print(f"True theta: {theta_star}")
 
     asked_question_list = list(range(question_num))
     asked_answer_list = []
     for i in range(question_num):
-        asked_answer_list.append(new_testtaker.ask(i))
+        asked_answer_list.append(new_testtaker.ask(z3, i))
     
     # MLE
     theta_hat = fit_theta_mle(z3, asked_question_list, asked_answer_list, epoch=300)
@@ -80,9 +79,9 @@ if __name__ == "__main__":
     asked_answer_list = jnp.array(asked_answer_list)
     z3 = jnp.array(z3)
 
-    mean_theta, variance_theta, hpdi_theta = fit_theta_mcmc(z3, asked_question_list, asked_answer_list)
+    mean_theta, std_theta = fit_theta_mcmc(z3, asked_question_list, asked_answer_list)
     print(f"mcmc theta mean: {mean_theta}")
-    print(f"mcmc theta variance: {variance_theta}")
+    print(f"mcmc theta std: {std_theta}")
     
     
    
