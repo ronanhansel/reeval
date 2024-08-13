@@ -8,6 +8,5 @@ __pycache__/
 data/
 plot/
 *.csv
-*.txt
 *.png
 *.log
