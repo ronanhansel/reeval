@@ -13,31 +13,39 @@ def choose_z_similar_to_theta(z3, unasked_question_list, theta_mean):
     diff = jnp.abs(z3_unasked - theta_mean)
     return unasked_question_list[jnp.argmin(diff)]
 
-# def computarized_adaptive_testing(z3, unasked_question_list, theta_mean):
-#     fisher_info_list = []
-#     for unasked_question_index in unasked_question_list:
-#         prob = item_response_fn_1PL(z3[unasked_question_index], theta_mean, datatype="jnp")
-#         bernoulli = torch.distributions.Bernoulli(prob)
-#         samples_Y = bernoulli.sample((100,))
-#         hessian_list = [] # TODO: all the same
-
-#         for sample in samples_Y:
-#             prob = item_response_fn_1PL(z3[unasked_question_index], theta_mean, datatype="jnp")
-#             bernoulli = torch.distributions.Bernoulli(prob)
-#             log_prob = bernoulli.log_prob(sample)
-
-#             grad = torch.autograd.grad(log_prob, theta_hat, create_graph=True)[0]
-#             hessian = torch.autograd.grad(grad, theta_hat)[0]
-#             hessian_list.append(hessian)
-
-#         fisher_info = torch.stack(hessian_list).mean()
-#         fisher_info_list.append(fisher_info)
-
-#     unasked_question_index_with_max_fisher_info = torch.argmax(torch.tensor(fisher_info_list)).item()
-#     new_question_index = unasked_question_list[unasked_question_index_with_max_fisher_info]
-#     print(f'new_question_index: {new_question_index}')
-
+def CAT_fisher(z3, unasked_question_list, theta_mean):
+    fisher_info_list = []
     
+    for unasked_question_index in unasked_question_list:
+        theta = torch.tensor(theta_mean.item(), requires_grad=True)
+        z_single = torch.tensor(
+            z3[unasked_question_index].clone().detach(), 
+            requires_grad=False
+            )
+        
+        prob = item_response_fn_1PL(z_single, theta)
+        bernoulli = torch.distributions.Bernoulli(prob)
+        sample = bernoulli.sample((1,))
+        log_prob = bernoulli.log_prob(sample)
+        grad = torch.autograd.grad(log_prob, theta, create_graph=True, retain_graph=True)[0]
+        hessian = torch.autograd.grad(grad, theta, retain_graph=True)[0]
+        fisher_info_list.append((-1)*hessian)
+        
+        # samples_Y = bernoulli.sample((100,))
+        # hessian_list = [] # doesn't depend on sample_y
+        # for sample_y in samples_Y:
+        #     if theta.grad is not None:
+        #         theta.grad.zero_() 
+        #     log_prob = bernoulli.log_prob(sample_y)
+        #     grad = torch.autograd.grad(log_prob, theta, create_graph=True, retain_graph=True)[0]
+        #     hessian = torch.autograd.grad(grad, theta, retain_graph=True)[0]
+        #     hessian_list.append(hessian)
+        # fisher_info = (-1) * torch.tensor(hessian_list).mean()
+        # fisher_info_list.append(fisher_info)
+
+    unasked_question_index_with_max_fisher_info = torch.argmax(torch.tensor(fisher_info_list)).item()
+    return unasked_question_list[unasked_question_index_with_max_fisher_info]
+
 def main(z3, new_testtaker, strategy="random", subset_question_num=None):
     print(f'strategy: {strategy}')
 
@@ -77,6 +85,10 @@ def main(z3, new_testtaker, strategy="random", subset_question_num=None):
             new_question_index = random.choice(unasked_question_list)
         elif strategy=="similar":
             new_question_index = choose_z_similar_to_theta(z3, unasked_question_list, mean_theta)
+        elif strategy=="fisher":
+            new_question_index = CAT_fisher(z3, unasked_question_list, mean_theta)
+        else:
+            raise ValueError("strategy should be 'random' or 'similar' or 'fisher'")
 
         new_answer = new_testtaker.ask(z3, new_question_index)
         unasked_question_list.remove(new_question_index)
@@ -89,11 +101,14 @@ def main(z3, new_testtaker, strategy="random", subset_question_num=None):
 if __name__ == "__main__":
     torch.manual_seed(42)
     
-    df = pd.read_csv(
-        '../data/synthetic/irt_result/Z/synthetic_1PL_Z_clean.csv'
-        )
-    z3 = torch.tensor(df.iloc[:, -1].tolist())
-    question_num = len(z3)
+    # df = pd.read_csv(
+    #     '../data/synthetic/irt_result/Z/synthetic_1PL_Z_clean.csv'
+    #     )
+    # z3 = torch.tensor(df.iloc[:, -1].tolist())
+    # question_num = len(z3)
+    
+    question_num = 1000
+    z3 = torch.normal(mean=0.0, std=1.0, size=(question_num,))
     
     print(f'num of total questions: {question_num}')
     
@@ -103,8 +118,9 @@ if __name__ == "__main__":
 
     random_theta_means, random_theta_stds = main(z3, new_testtaker, strategy="random")
     
-    subset_question_num = 100
-    similar_theta_means, similar_theta_stds = main(z3, new_testtaker, strategy="similar", subset_question_num=subset_question_num)
+    subset_question_num = question_num
+    # similar_theta_means, similar_theta_stds = main(z3, new_testtaker, strategy="similar", subset_question_num=subset_question_num)
+    fisher_theta_means, fisher_theta_stds = main(z3, new_testtaker, strategy="fisher", subset_question_num=subset_question_num)
     
     total_question_nums = range(question_num)
     subset_question_nums = range(subset_question_num)
@@ -115,16 +131,36 @@ if __name__ == "__main__":
     plt.plot(total_question_nums, random_theta_means, label='Random Testing', color='blue')
     random_theta_means = jnp.array(random_theta_means)
     random_theta_stds = jnp.array(random_theta_stds)
-    plt.fill_between(total_question_nums, random_theta_means - 3 * random_theta_stds, random_theta_means + 3 * random_theta_stds, color='blue', alpha=0.2)
+    plt.fill_between(total_question_nums, 
+                     random_theta_means - 3 * random_theta_stds, 
+                     random_theta_means + 3 * random_theta_stds, 
+                     color='blue', 
+                     alpha=0.2
+                     )
     
-    plt.plot(subset_question_nums, similar_theta_means, label='choose z similar to theta', color='green')
-    similar_theta_means = jnp.array(similar_theta_means)
-    similar_theta_stds = jnp.array(similar_theta_stds)
-    plt.fill_between(subset_question_nums, similar_theta_means - 3 * similar_theta_stds, similar_theta_means + 3 * similar_theta_stds, color='green', alpha=0.2)
+    # plt.plot(subset_question_nums, similar_theta_means, label='choose z similar to theta', color='green')
+    # similar_theta_means = jnp.array(similar_theta_means)
+    # similar_theta_stds = jnp.array(similar_theta_stds)
+    # plt.fill_between(subset_question_nums, 
+    #                  similar_theta_means - 3 * similar_theta_stds, 
+    #                  similar_theta_means + 3 * similar_theta_stds, 
+    #                  color='green', 
+    #                  alpha=0.2
+    #                  )
+
+    plt.plot(subset_question_nums, fisher_theta_means, label='CAT with fisher', color='red')
+    fisher_theta_means = jnp.array(fisher_theta_means)
+    fisher_theta_stds = jnp.array(fisher_theta_stds)
+    plt.fill_between(subset_question_nums, 
+                     fisher_theta_means - 3 * fisher_theta_stds, 
+                     fisher_theta_means + 3 * fisher_theta_stds, 
+                     color='red', 
+                     alpha=0.2
+                     )
 
     plt.xlabel('Number of Questions')
     plt.ylabel('Theta')
     plt.title('Theta Estimation vs. Number of Questions')
     plt.legend()
     plt.grid(True)
-    plt.savefig('../plot/synthetic/random_test.png')
+    plt.savefig('../plot/synthetic/random_test_fisher.png')
