@@ -14,8 +14,6 @@ TOGETHERAI_KEY = '...'
 HF_TOKEN = '...'
 ```
 
-
-
 # vllm query for more testtakers
 
 `vllm_query/` is for getting whole airbench result (5694 questions) on models supported by vllm (200 seconods/model)

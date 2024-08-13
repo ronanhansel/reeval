@@ -7,7 +7,10 @@ from fit_theta import fit_theta_mcmc
 import jax.numpy as jnp
 from utils import item_response_fn_1PL
 
-def choose_z_similar_to_theta(z3, unasked_question_list, theta_mean):
+# export JAX_PLATFORM_NAME=cpu
+# nohup python CAT.py > /scratch/yuhengtu/workspace/certified-eval/src/CAT.log 2>&1 &
+
+def CAT_owen(z3, unasked_question_list, theta_mean):
     z3_unasked = z3[unasked_question_list]
     z3_unasked = jnp.array(z3_unasked)
     diff = jnp.abs(z3_unasked - theta_mean)
@@ -18,10 +21,7 @@ def CAT_fisher(z3, unasked_question_list, theta_mean):
     
     for unasked_question_index in unasked_question_list:
         theta = torch.tensor(theta_mean.item(), requires_grad=True)
-        z_single = torch.tensor(
-            z3[unasked_question_index].clone().detach(), 
-            requires_grad=False
-            )
+        z_single = z3[unasked_question_index].clone().detach()
         
         prob = item_response_fn_1PL(z_single, theta)
         bernoulli = torch.distributions.Bernoulli(prob)
@@ -46,6 +46,28 @@ def CAT_fisher(z3, unasked_question_list, theta_mean):
     unasked_question_index_with_max_fisher_info = torch.argmax(torch.tensor(fisher_info_list)).item()
     return unasked_question_list[unasked_question_index_with_max_fisher_info]
 
+def CAT_modern(z3, unasked_question_list, theta_samples):
+    fisher_info_list = []
+    
+    for unasked_question_index in unasked_question_list:
+        fisher_info_samples = []
+        for theta_sample in theta_samples:
+            theta = torch.tensor(theta_sample.item(), requires_grad=True)
+            z_single = z3[unasked_question_index].clone().detach()
+            
+            prob = item_response_fn_1PL(z_single, theta)
+            bernoulli = torch.distributions.Bernoulli(prob)
+            sample = bernoulli.sample((1,))
+            log_prob = bernoulli.log_prob(sample)
+            grad = torch.autograd.grad(log_prob, theta, create_graph=True, retain_graph=True)[0]
+            hessian = torch.autograd.grad(grad, theta, retain_graph=True)[0]
+            fisher_info_samples.append((-1)*hessian)
+            
+        fisher_info_list.append(torch.tensor(fisher_info_samples).mean())
+        
+    unasked_question_index_with_max_fisher_info = torch.argmax(torch.tensor(fisher_info_list)).item()
+    return unasked_question_list[unasked_question_index_with_max_fisher_info]
+    
 def main(z3, new_testtaker, strategy="random", subset_question_num=None):
     print(f'strategy: {strategy}')
 
@@ -70,7 +92,7 @@ def main(z3, new_testtaker, strategy="random", subset_question_num=None):
         asked_answer_jnp = jnp.array(asked_answer_list)
         asked_z3_jnp = jnp.array(asked_z3_list)
         
-        mean_theta, std_theta = fit_theta_mcmc(
+        mean_theta, std_theta, theta_samples = fit_theta_mcmc(
             asked_z3_jnp, 
             asked_question_jnp, 
             asked_answer_jnp
@@ -83,13 +105,15 @@ def main(z3, new_testtaker, strategy="random", subset_question_num=None):
         
         if strategy=="random":
             new_question_index = random.choice(unasked_question_list)
-        elif strategy=="similar":
-            new_question_index = choose_z_similar_to_theta(z3, unasked_question_list, mean_theta)
+        elif strategy=="owen":
+            new_question_index = CAT_owen(z3, unasked_question_list, mean_theta)
         elif strategy=="fisher":
             new_question_index = CAT_fisher(z3, unasked_question_list, mean_theta)
+        elif strategy=="modern":
+            new_question_index = CAT_modern(z3, unasked_question_list, theta_samples)
         else:
-            raise ValueError("strategy should be 'random' or 'similar' or 'fisher'")
-
+            raise ValueError("strategy not supported")
+        
         new_answer = new_testtaker.ask(z3, new_question_index)
         unasked_question_list.remove(new_question_index)
         asked_question_list.append(new_question_index)
@@ -119,8 +143,9 @@ if __name__ == "__main__":
     random_theta_means, random_theta_stds = main(z3, new_testtaker, strategy="random")
     
     subset_question_num = question_num
-    # similar_theta_means, similar_theta_stds = main(z3, new_testtaker, strategy="similar", subset_question_num=subset_question_num)
+    owen_theta_means, owen_theta_stds = main(z3, new_testtaker, strategy="owen", subset_question_num=subset_question_num)
     fisher_theta_means, fisher_theta_stds = main(z3, new_testtaker, strategy="fisher", subset_question_num=subset_question_num)
+    modern_theta_means, modern_theta_stds = main(z3, new_testtaker, strategy="modern", subset_question_num=subset_question_num)
     
     total_question_nums = range(question_num)
     subset_question_nums = range(subset_question_num)
@@ -138,15 +163,15 @@ if __name__ == "__main__":
                      alpha=0.2
                      )
     
-    # plt.plot(subset_question_nums, similar_theta_means, label='choose z similar to theta', color='green')
-    # similar_theta_means = jnp.array(similar_theta_means)
-    # similar_theta_stds = jnp.array(similar_theta_stds)
-    # plt.fill_between(subset_question_nums, 
-    #                  similar_theta_means - 3 * similar_theta_stds, 
-    #                  similar_theta_means + 3 * similar_theta_stds, 
-    #                  color='green', 
-    #                  alpha=0.2
-    #                  )
+    plt.plot(subset_question_nums, owen_theta_means, label='CAT with owen', color='green')
+    owen_theta_means = jnp.array(owen_theta_means)
+    owen_theta_stds = jnp.array(owen_theta_stds)
+    plt.fill_between(subset_question_nums, 
+                     owen_theta_means - 3 * owen_theta_stds, 
+                     owen_theta_means + 3 * owen_theta_stds, 
+                     color='green', 
+                     alpha=0.2
+                     )
 
     plt.plot(subset_question_nums, fisher_theta_means, label='CAT with fisher', color='red')
     fisher_theta_means = jnp.array(fisher_theta_means)
@@ -158,9 +183,19 @@ if __name__ == "__main__":
                      alpha=0.2
                      )
 
+    plt.plot(subset_question_nums, modern_theta_means, label='CAT with modern', color='purple')
+    modern_theta_means = jnp.array(modern_theta_means)
+    modern_theta_stds = jnp.array(modern_theta_stds)
+    plt.fill_between(subset_question_nums, 
+                     modern_theta_means - 3 * modern_theta_stds, 
+                     modern_theta_means + 3 * modern_theta_stds, 
+                     color='purple', 
+                     alpha=0.2
+                     )
+    
     plt.xlabel('Number of Questions')
     plt.ylabel('Theta')
     plt.title('Theta Estimation vs. Number of Questions')
     plt.legend()
     plt.grid(True)
-    plt.savefig('../plot/synthetic/random_test_fisher.png')
+    plt.savefig('../plot/synthetic/random_adaptive_test.png')

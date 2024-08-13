@@ -54,7 +54,7 @@ def fit_theta_mcmc(Z, asked_question_list, asked_answer_list, num_samples=9000, 
     std_theta = jnp.std(theta_samples)
     # hpdi_theta = hpdi(theta_samples, 0.9)
 
-    return mean_theta, std_theta
+    return mean_theta, std_theta, theta_samples
 
 if __name__ == "__main__":
     torch.manual_seed(10)
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     asked_answer_list = jnp.array(asked_answer_list)
     z3 = jnp.array(z3)
 
-    mean_theta, std_theta = fit_theta_mcmc(z3, asked_question_list, asked_answer_list)
+    mean_theta, std_theta, _ = fit_theta_mcmc(z3, asked_question_list, asked_answer_list)
     print(f"mcmc theta mean: {mean_theta}")
     print(f"mcmc theta std: {std_theta}")
     

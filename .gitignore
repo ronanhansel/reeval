@@ -10,3 +10,4 @@ plot/
 *.csv
 *.txt
 *.png
+*.log
