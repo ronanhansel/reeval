@@ -5,7 +5,6 @@ conda activate certify
 pip install -r requirements.txt
 
 conda env create -f R.yml
-
 ```
 
 create a .env file

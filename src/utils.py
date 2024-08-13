@@ -23,7 +23,6 @@ def item_response_fn_1PL(z3, theta, datatype="torch"):
 def calculate_1d_wasserstein_distance(vector1, vector2):
     return wasserstein_distance(vector1, vector2)
 
-# 3D Wasserstein Distance
 def calculate_3d_wasserstein_distance(matrix1, matrix2):
     return wasserstein_distance_nd(matrix1, matrix2)
 
