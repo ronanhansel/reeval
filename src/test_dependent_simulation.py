@@ -3,6 +3,7 @@ from synthetic_testtaker import SimulatedTestTaker
 from fit_theta import fit_theta_mcmc
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
+from utils import item_response_fn_1PL
 
 def inverse_item_response_fn_1PL(y,theta):
     return -theta - torch.log((1 - y) / y)
@@ -76,3 +77,24 @@ if __name__ == "__main__":
     plt.legend()
 
     plt.savefig('../plot/synthetic/test_dependent_simulation.png')
+    
+    
+    
+    # CTT
+    probs = item_response_fn_1PL(Z_1, theta_1, datatype="jnp")
+    response_1_list = []
+    for prob in probs:
+        prob_tensor = torch.tensor(prob.tolist())
+        bernoulli = torch.distributions.Bernoulli(prob_tensor)
+        response_1 = bernoulli.sample()
+        response_1_list.append(response_1)
+    print(f"CTT theta_1: {sum(response_1_list)/len(response_1_list)}")
+    
+    probs = item_response_fn_1PL(Z_2, theta_2, datatype="jnp")
+    response_2_list = []
+    for prob in probs:
+        prob_tensor = torch.tensor(prob.tolist())
+        bernoulli = torch.distributions.Bernoulli(prob_tensor)
+        response_2 = bernoulli.sample()
+        response_2_list.append(response_2)
+    print(f"CTT theta_2: {sum(response_2_list)/len(response_2_list)}")
