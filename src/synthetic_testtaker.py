@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 import torch
-from utils import item_response_fn_3PL, item_response_fn_2PL, item_response_fn_1PL
+from utils import item_response_fn_3PL, item_response_fn_2PL, item_response_fn_1PL, item_response_fn_1PL_cheat
 import numpy as np
 from scipy.stats import beta, lognorm, norm
 import jax
@@ -32,6 +32,22 @@ class SimulatedTestTaker():
     def get_ability(self):
         return self.ability
 
+class CheatingTestTaker():
+    def __init__(self, true_theta, cheat_gain=0, model="1PL"):
+        self.model = model
+        self.true_ability = true_theta
+        self.cheat_ability = true_theta + cheat_gain
+
+    def ask(self, Z, contamination, question_index):
+        if self.model == "1PL":
+            prob = item_response_fn_1PL_cheat(
+                Z[question_index], contamination[question_index], self.true_ability, self.cheat_ability
+            )
+        return torch.distributions.Bernoulli(prob).sample()
+    
+    def get_ability(self):
+        return self.true_ability, self.cheat_ability
+    
 if __name__ == "__main__":
     torch.manual_seed(42)
     np.random.seed(42)
