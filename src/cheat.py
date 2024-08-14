@@ -56,7 +56,7 @@ if __name__ == "__main__":
     print(f"True theta: {true_theta}")
     print(f"Cheat theta: {cheat_theta}")
 
-    contamination_percent = 0.99
+    contamination_percent = 0.8
     num_ones = int(question_num * contamination_percent)
     contamination = torch.cat([
         torch.ones(num_ones), 
