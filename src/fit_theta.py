@@ -83,6 +83,3 @@ if __name__ == "__main__":
     print(f"mcmc theta mean: {mean_theta}")
     print(f"mcmc theta std: {std_theta}")
     
-    
-   
-    
