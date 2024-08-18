@@ -114,12 +114,8 @@ def main(z3, new_testtaker, strategy, subset_question_num):
     for epoch in range(subset_question_num):
         print(f'\nepoch: {epoch+1}')
         asked_question_jnp = jnp.array(asked_question_list)
-        print(f'asked_question_jnp: {asked_question_jnp}')
         asked_answer_jnp = jnp.array(asked_answer_list)
-        print(f'asked_answer_jnp: {asked_answer_jnp}')
         asked_z3_jnp = jnp.array(asked_z3_list)
-        print(f'asked_z3_jnp: {asked_z3_jnp}')
-        print(f'unasked_question_list: {unasked_question_list}')
         
         mean_theta, std_theta, theta_samples = fit_theta_mcmc(
             asked_z3_jnp, 
