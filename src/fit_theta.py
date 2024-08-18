@@ -98,7 +98,7 @@ def plot_trace_and_density(theta_samples_list):
     plt.legend()
 
     plt.tight_layout()
-    plt.savefig("../plot/synthetic/mcmc_diagnostic.png")
+    plt.savefig("../plot/synthetic/mcmc_diagnostic_2.png")
     
 if __name__ == "__main__":
     torch.manual_seed(10)
@@ -125,14 +125,19 @@ if __name__ == "__main__":
 
     theta_samples_list = []
     
-    mean_theta, std_theta, theta_samples = fit_theta_mcmc_key(42, z3, asked_question_list, asked_answer_list)
-    theta_samples_list.append(theta_samples)
-    print(f"mcmc theta mean: {mean_theta}")
-    print(f"mcmc theta std: {std_theta}")
+    # mean_theta, std_theta, theta_samples = fit_theta_mcmc_key(42, z3, asked_question_list, asked_answer_list)
+    # theta_samples_list.append(theta_samples)
+    # print(f"mcmc theta mean: {mean_theta}")
+    # print(f"mcmc theta std: {std_theta}")
     
     mean_theta, std_theta, theta_samples = fit_theta_mcmc_key(43, z3, asked_question_list, asked_answer_list)
     theta_samples_list.append(theta_samples)
     print(f"mcmc theta mean: {mean_theta}")
     print(f"mcmc theta std: {std_theta}")
     
+    # plot_trace_and_density(theta_samples_list)
+    
+    
+    
+    theta_samples_list = [theta_samples[:1000], theta_samples[:1001]]
     plot_trace_and_density(theta_samples_list)
