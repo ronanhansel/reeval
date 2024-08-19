@@ -31,13 +31,14 @@ def fit_theta_mle(Z, asked_question_list, asked_answer_list, epoch=300):
         
     return theta_hat
 
-def model(Z, asked_question_list, asked_answer_list):
+def model(Z_asked, asked_answer_list):
     theta_hat = numpyro.sample("theta_hat", dist.Normal(0.0, 1.0)) # prior
-    Z_asked = Z[asked_question_list]
+    print(f"Z_asked: {Z_asked}")
+    print(f"asked_answer_list: {asked_answer_list}")
     probs = item_response_fn_1PL(Z_asked, theta_hat, datatype="jnp")
     numpyro.sample("obs", dist.Bernoulli(probs), obs=asked_answer_list)
 
-def fit_theta_mcmc(Z, asked_question_list, asked_answer_list, num_samples=9000, num_warmup=1000):
+def fit_theta_mcmc(Z_asked, asked_answer_list, num_samples=9000, num_warmup=1000):
     rng_key = random.PRNGKey(0)
     rng_key, rng_key_ = random.split(rng_key)
     
@@ -45,8 +46,7 @@ def fit_theta_mcmc(Z, asked_question_list, asked_answer_list, num_samples=9000, 
     mcmc = MCMC(nuts_kernel, num_samples=num_samples, num_warmup=num_warmup)
     mcmc.run(
         rng_key_,
-        Z=Z,
-        asked_question_list=asked_question_list,
+        Z_asked=Z_asked,
         asked_answer_list=asked_answer_list,
     )
     mcmc.print_summary()

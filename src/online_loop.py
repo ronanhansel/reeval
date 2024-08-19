@@ -27,7 +27,7 @@ if __name__ == "__main__":
         asked_answer_list_subset = jnp.array(asked_answer_list[:question_num])
         z3_subset = jnp.array(z3[:question_num])
 
-        mean_theta, std_theta = fit_theta_mcmc(
+        mean_theta, std_theta, _ = fit_theta_mcmc(
             z3_subset, 
             asked_question_list_subset, 
             asked_answer_list_subset
