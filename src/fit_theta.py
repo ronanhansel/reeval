@@ -31,14 +31,13 @@ def fit_theta_mle(Z, asked_question_list, asked_answer_list, epoch=300):
         
     return theta_hat
 
-def model(Z_asked, asked_answer_list):
+def model(Z, asked_question_list, asked_answer_list):
     theta_hat = numpyro.sample("theta_hat", dist.Normal(0.0, 1.0)) # prior
-    print(f"Z_asked: {Z_asked}")
-    print(f"asked_answer_list: {asked_answer_list}")
+    Z_asked = Z[asked_question_list]
     probs = item_response_fn_1PL(Z_asked, theta_hat, datatype="jnp")
     numpyro.sample("obs", dist.Bernoulli(probs), obs=asked_answer_list)
 
-def fit_theta_mcmc(Z_asked, asked_answer_list, num_samples=9000, num_warmup=1000):
+def fit_theta_mcmc(Z, asked_question_list, asked_answer_list, num_samples=9000, num_warmup=1000):
     rng_key = random.PRNGKey(0)
     rng_key, rng_key_ = random.split(rng_key)
     
@@ -46,7 +45,8 @@ def fit_theta_mcmc(Z_asked, asked_answer_list, num_samples=9000, num_warmup=1000
     mcmc = MCMC(nuts_kernel, num_samples=num_samples, num_warmup=num_warmup)
     mcmc.run(
         rng_key_,
-        Z_asked=Z_asked,
+        Z=Z,
+        asked_question_list=asked_question_list,
         asked_answer_list=asked_answer_list,
     )
     mcmc.print_summary()
@@ -54,7 +54,6 @@ def fit_theta_mcmc(Z_asked, asked_answer_list, num_samples=9000, num_warmup=1000
     theta_samples = mcmc.get_samples()["theta_hat"]
     mean_theta = jnp.mean(theta_samples)
     std_theta = jnp.std(theta_samples)
-    # hpdi_theta = hpdi(theta_samples, 0.9)
 
     return mean_theta, std_theta, theta_samples
 
@@ -115,8 +114,8 @@ if __name__ == "__main__":
         asked_answer_list.append(new_testtaker.ask(z3, i))
     
     # MLE
-    # theta_hat = fit_theta_mle(z3, asked_question_list, asked_answer_list, epoch=300)
-    # print(f"mle theta: {theta_hat}")
+    theta_hat = fit_theta_mle(z3, asked_question_list, asked_answer_list, epoch=300)
+    print(f"mle theta: {theta_hat}")
 
     # MCMC
     asked_question_list = jnp.array(asked_question_list)
@@ -125,17 +124,17 @@ if __name__ == "__main__":
 
     theta_samples_list = []
     
-    # mean_theta, std_theta, theta_samples = fit_theta_mcmc_key(42, z3, asked_question_list, asked_answer_list)
-    # theta_samples_list.append(theta_samples)
-    # print(f"mcmc theta mean: {mean_theta}")
-    # print(f"mcmc theta std: {std_theta}")
+    mean_theta, std_theta, theta_samples = fit_theta_mcmc_key(42, z3, asked_question_list, asked_answer_list)
+    theta_samples_list.append(theta_samples)
+    print(f"mcmc theta mean: {mean_theta}")
+    print(f"mcmc theta std: {std_theta}")
     
     mean_theta, std_theta, theta_samples = fit_theta_mcmc_key(43, z3, asked_question_list, asked_answer_list)
     theta_samples_list.append(theta_samples)
     print(f"mcmc theta mean: {mean_theta}")
     print(f"mcmc theta std: {std_theta}")
     
-    # plot_trace_and_density(theta_samples_list)
+    plot_trace_and_density(theta_samples_list)
     
     
     

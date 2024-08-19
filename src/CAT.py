@@ -101,28 +101,28 @@ def main(z3, new_testtaker, strategy, subset_question_num):
     question_num = len(z3)
 
     init_question_index = random.randint(0, question_num - 1)
-    print(f'init_question_index: {init_question_index}')
     init_answer = new_testtaker.ask(z3, init_question_index)
 
     unasked_question_list = [i for i in range(question_num)]
     unasked_question_list.remove(init_question_index)
+    asked_question_list = [init_question_index]
     asked_answer_list = [init_answer.float()]
-    asked_z3_list = [z3[init_question_index]]
 
     theta_means = []
     theta_stds = []
     for epoch in range(subset_question_num):
         print(f'\nepoch: {epoch+1}')
+        asked_question_jnp = jnp.array(asked_question_list)
         asked_answer_jnp = jnp.array(asked_answer_list)
-        asked_z3_jnp = jnp.array(asked_z3_list)
+        z3_jnp = jnp.array(z3)
 
         mean_theta, std_theta, theta_samples = fit_theta_mcmc(
-            asked_z3_jnp, 
+            z3_jnp, 
+            asked_question_jnp, 
             asked_answer_jnp
             )
-        theta_means.append(mean_theta.item())
-        print(f"theta mean: {theta_means}")
-        theta_stds.append(std_theta.item())
+        theta_means.append(mean_theta)
+        theta_stds.append(std_theta)
 
         if len(unasked_question_list) == 0:
             break
@@ -138,11 +138,10 @@ def main(z3, new_testtaker, strategy, subset_question_num):
         else:
             raise ValueError("strategy not supported")
         
-        print(f'new_question_index: {new_question_index}')
         new_answer = new_testtaker.ask(z3, new_question_index)
         unasked_question_list.remove(new_question_index)
+        asked_question_list.append(new_question_index)
         asked_answer_list.append(new_answer.float())
-        asked_z3_list.append(z3[new_question_index])
         
         clear_caches()
         
@@ -157,9 +156,8 @@ if __name__ == "__main__":
     # z3 = torch.tensor(df.iloc[:, -1].tolist())
     # question_num = len(z3)
     
-    question_num = 10000
+    question_num = 10
     z3 = torch.normal(mean=0.0, std=1.0, size=(question_num,))
-    print(f'z3: {z3}')
     
     print(f'num of total questions: {question_num}')
     
@@ -167,7 +165,7 @@ if __name__ == "__main__":
     theta_star = new_testtaker.get_ability()
     print(f"True theta: {theta_star}")
 
-    subset_question_num = 100
+    subset_question_num = 5
     random_theta_means, random_theta_stds = main(z3, new_testtaker, strategy="random", subset_question_num=subset_question_num)
     owen_theta_means, owen_theta_stds = main(z3, new_testtaker, strategy="owen", subset_question_num=subset_question_num)
     fisher_theta_means, fisher_theta_stds = main(z3, new_testtaker, strategy="fisher", subset_question_num=subset_question_num)
