@@ -65,8 +65,8 @@ def CAT_fisher(z3, unasked_question_list, theta_mean):
         # fisher_info = (-1) * torch.tensor(hessian_list).mean()
         # fisher_info_list.append(fisher_info)
 
-    unasked_question_index_with_max_fisher_info = torch.argmax(torch.tensor(fisher_info_list)).item()
-    return unasked_question_list[unasked_question_index_with_max_fisher_info]
+    index_with_max_fisher_info = torch.argmax(torch.tensor(fisher_info_list)).item()
+    return unasked_question_list[index_with_max_fisher_info]
 
 def CAT_modern(z3, unasked_question_list, theta_samples):
     theta_samples_tensor = torch.tensor(np.array(theta_samples))
@@ -156,7 +156,7 @@ if __name__ == "__main__":
     # z3 = torch.tensor(df.iloc[:, -1].tolist())
     # question_num = len(z3)
     
-    question_num = 10
+    question_num = 1000
     z3 = torch.normal(mean=0.0, std=1.0, size=(question_num,))
     
     print(f'num of total questions: {question_num}')
@@ -165,10 +165,10 @@ if __name__ == "__main__":
     theta_star = new_testtaker.get_ability()
     print(f"True theta: {theta_star}")
 
-    subset_question_num = 5
-    random_theta_means, random_theta_stds = main(z3, new_testtaker, strategy="random", subset_question_num=subset_question_num)
-    owen_theta_means, owen_theta_stds = main(z3, new_testtaker, strategy="owen", subset_question_num=subset_question_num)
-    fisher_theta_means, fisher_theta_stds = main(z3, new_testtaker, strategy="fisher", subset_question_num=subset_question_num)
+    subset_question_num = 500
+    # random_theta_means, random_theta_stds = main(z3, new_testtaker, strategy="random", subset_question_num=subset_question_num)
+    # owen_theta_means, owen_theta_stds = main(z3, new_testtaker, strategy="owen", subset_question_num=subset_question_num)
+    # fisher_theta_means, fisher_theta_stds = main(z3, new_testtaker, strategy="fisher", subset_question_num=subset_question_num)
     modern_theta_means, modern_theta_stds = main(z3, new_testtaker, strategy="modern", subset_question_num=subset_question_num)
     
     total_question_nums = range(question_num)
