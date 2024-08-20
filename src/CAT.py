@@ -8,26 +8,11 @@ import random
 from synthetic_testtaker import SimulatedTestTaker
 from fit_theta import fit_theta_mcmc
 import jax.numpy as jnp
-from utils import item_response_fn_1PL
+from utils import item_response_fn_1PL, clear_caches
 import numpy as np
 
 # export JAX_PLATFORM_NAME=cpu
 # nohup python CAT.py > /scratch/yuhengtu/workspace/certified-eval/src/CAT.log 2>&1 &
-
-def clear_caches():
-    modules = list(sys.modules.items())  # Create a list of items to avoid runtime errors
-    for module_name, module in modules:
-        if module_name.startswith("jax"):
-            if module_name not in ["jax.interpreters.partial_eval"]:
-                for obj_name in dir(module):
-                    obj = getattr(module, obj_name)
-                    if hasattr(obj, "cache_clear"):
-                        try:
-                            obj.cache_clear()
-                        except:
-                            pass
-    gc.collect()
-    print("cache cleared")
   
 def CAT_owen(z3, unasked_question_list, theta_mean):
     z3_unasked = z3[unasked_question_list]
@@ -37,34 +22,12 @@ def CAT_owen(z3, unasked_question_list, theta_mean):
 
 def CAT_fisher(z3, unasked_question_list, theta_mean):
     fisher_info_list = []
-    
     for unasked_question_index in unasked_question_list:
         theta = torch.tensor(theta_mean.item(), requires_grad=True)
-        z_single = z3[unasked_question_index].clone().detach()
-        
+        z_single = z3[unasked_question_index].clone().detach()    
         prob = item_response_fn_1PL(z_single, theta)
         hessian = prob * (1 - prob)
         fisher_info_list.append(hessian)
-        
-        # bernoulli = torch.distributions.Bernoulli(prob)
-        # sample = bernoulli.sample((1,))
-        # log_prob = bernoulli.log_prob(sample)
-        # grad = torch.autograd.grad(log_prob, theta, create_graph=True, retain_graph=True)[0]
-        # hessian = torch.autograd.grad(grad, theta, retain_graph=True)[0]
-        # fisher_info_list.append((-1)*hessian)
-        
-        # samples_Y = bernoulli.sample((100,))
-        # hessian_list = [] # doesn't depend on sample_y
-        # for sample_y in samples_Y:
-        #     if theta.grad is not None:
-        #         theta.grad.zero_() 
-        #     log_prob = bernoulli.log_prob(sample_y)
-        #     grad = torch.autograd.grad(log_prob, theta, create_graph=True, retain_graph=True)[0]
-        #     hessian = torch.autograd.grad(grad, theta, retain_graph=True)[0]
-        #     hessian_list.append(hessian)
-        # fisher_info = (-1) * torch.tensor(hessian_list).mean()
-        # fisher_info_list.append(fisher_info)
-
     index_with_max_fisher_info = torch.argmax(torch.tensor(fisher_info_list)).item()
     return unasked_question_list[index_with_max_fisher_info]
 
@@ -72,26 +35,11 @@ def CAT_modern(z3, unasked_question_list, theta_samples):
     theta_samples_tensor = torch.tensor(np.array(theta_samples))
     fisher_info_list = []
     for unasked_question_index in unasked_question_list:
-        # fisher_info_samples = []
-        # for theta_sample in theta_samples:
-        #     theta = torch.tensor(theta_sample.item(), requires_grad=True)
-        #     z_single = z3[unasked_question_index].clone().detach()
-        #     prob = item_response_fn_1PL(z_single, theta)
-        #     # bernoulli = torch.distributions.Bernoulli(prob)
-        #     # sample = bernoulli.sample((1,))
-        #     # log_prob = bernoulli.log_prob(sample)
-        #     # grad = torch.autograd.grad(log_prob, theta, create_graph=True, retain_graph=True)[0]
-        #     # hessian = torch.autograd.grad(grad, theta, retain_graph=True)[0]
-        #     hessian = prob * (1 - prob)
-        #     fisher_info_samples.append((-1)*hessian)
-        # fisher_info_list.append(torch.tensor(fisher_info_samples).mean())
-        
         z_single = z3[unasked_question_index].clone().detach()
         z_single_expanded = z_single.expand(theta_samples_tensor.shape[0])
         prob = item_response_fn_1PL(z_single_expanded, theta_samples_tensor)
         hessian = prob * (1 - prob)
         fisher_info_list.append(hessian.mean())
-        
     unasked_question_index_with_max_fisher_info = torch.argmax(torch.tensor(fisher_info_list)).item()
     return unasked_question_list[unasked_question_index_with_max_fisher_info]
     
@@ -156,7 +104,7 @@ if __name__ == "__main__":
     # z3 = torch.tensor(df.iloc[:, -1].tolist())
     # question_num = len(z3)
     
-    question_num = 1000
+    question_num = 10000
     z3 = torch.normal(mean=0.0, std=1.0, size=(question_num,))
     
     print(f'num of total questions: {question_num}')
@@ -165,64 +113,84 @@ if __name__ == "__main__":
     theta_star = new_testtaker.get_ability()
     print(f"True theta: {theta_star}")
 
-    subset_question_num = 500
-    # random_theta_means, random_theta_stds = main(z3, new_testtaker, strategy="random", subset_question_num=subset_question_num)
-    # owen_theta_means, owen_theta_stds = main(z3, new_testtaker, strategy="owen", subset_question_num=subset_question_num)
-    # fisher_theta_means, fisher_theta_stds = main(z3, new_testtaker, strategy="fisher", subset_question_num=subset_question_num)
+    subset_question_num = 1000
+    random_theta_means, random_theta_stds = main(z3, new_testtaker, strategy="random", subset_question_num=subset_question_num)
+    owen_theta_means, owen_theta_stds = main(z3, new_testtaker, strategy="owen", subset_question_num=subset_question_num)
+    fisher_theta_means, fisher_theta_stds = main(z3, new_testtaker, strategy="fisher", subset_question_num=subset_question_num)
     modern_theta_means, modern_theta_stds = main(z3, new_testtaker, strategy="modern", subset_question_num=subset_question_num)
     
     total_question_nums = range(question_num)
     subset_question_nums = range(subset_question_num)
     
-    plt.figure(figsize=(10, 6))
-    plt.plot(subset_question_nums, [theta_star] * subset_question_num, label='True Theta', color='black', linestyle='--')
-    
-    plt.plot(subset_question_nums, random_theta_means, label='Random Testing', color='blue')
+    fig, axs = plt.subplots(2, 2, figsize=(14, 10))
+
+    # First subplot - Random Testing
+    axs[0, 0].plot(subset_question_nums, [theta_star] * subset_question_num, label='True Theta', color='black', linestyle='--')
+    axs[0, 0].plot(subset_question_nums, random_theta_means, label='Random Testing', color='blue')
     random_theta_means = jnp.array(random_theta_means)
     random_theta_stds = jnp.array(random_theta_stds)
-    plt.fill_between(
-        subset_question_nums, 
-        random_theta_means - 3 * random_theta_stds, 
-        random_theta_means + 3 * random_theta_stds, 
-        color='blue', 
-        alpha=0.2
-    )
-    
-    plt.plot(subset_question_nums, owen_theta_means, label='CAT with owen', color='green')
-    owen_theta_means = jnp.array(owen_theta_means)
-    owen_theta_stds = jnp.array(owen_theta_stds)
-    plt.fill_between(subset_question_nums, 
-                     owen_theta_means - 3 * owen_theta_stds, 
-                     owen_theta_means + 3 * owen_theta_stds, 
-                     color='green', 
-                     alpha=0.2
-                     )
+    axs[0, 0].fill_between(subset_question_nums, 
+                        random_theta_means - 3 * random_theta_stds, 
+                        random_theta_means + 3 * random_theta_stds, 
+                        color='blue', 
+                        alpha=0.2)
+    axs[0, 0].set_title('Random Testing')
+    axs[0, 0].set_ylim([-4, 4])
+    axs[0, 0].grid(True)
+    axs[0, 0].legend()
 
-    plt.plot(subset_question_nums, fisher_theta_means, label='CAT with fisher', color='red')
+    # Second subplot - CAT with Fisher
+    axs[0, 1].plot(subset_question_nums, [theta_star] * subset_question_num, label='True Theta', color='black', linestyle='--')
+    axs[0, 1].plot(subset_question_nums, fisher_theta_means, label='CAT with fisher', color='red')
     fisher_theta_means = jnp.array(fisher_theta_means)
     fisher_theta_stds = jnp.array(fisher_theta_stds)
-    plt.fill_between(subset_question_nums, 
-                     fisher_theta_means - 3 * fisher_theta_stds, 
-                     fisher_theta_means + 3 * fisher_theta_stds, 
-                     color='red', 
-                     alpha=0.2
-                     )
+    axs[0, 1].fill_between(subset_question_nums, 
+                        fisher_theta_means - 3 * fisher_theta_stds, 
+                        fisher_theta_means + 3 * fisher_theta_stds, 
+                        color='red', 
+                        alpha=0.2)
+    axs[0, 1].set_title('CAT with Fisher')
+    axs[0, 1].set_ylim([-4, 4])
+    axs[0, 1].grid(True)
+    axs[0, 1].legend()
 
-    plt.plot(subset_question_nums, modern_theta_means, label='CAT with modern', color='purple')
+    # Third subplot - CAT with Owen
+    axs[1, 0].plot(subset_question_nums, [theta_star] * subset_question_num, label='True Theta', color='black', linestyle='--')
+    axs[1, 0].plot(subset_question_nums, owen_theta_means, label='CAT with owen', color='green')
+    owen_theta_means = jnp.array(owen_theta_means)
+    owen_theta_stds = jnp.array(owen_theta_stds)
+    axs[1, 0].fill_between(subset_question_nums, 
+                           owen_theta_means - 3 * owen_theta_stds, 
+                           owen_theta_means + 3 * owen_theta_stds, 
+                           color='green', 
+                           alpha=0.2)
+    axs[1, 0].set_title('CAT with Owen')
+    axs[1, 0].set_ylim([-4, 4])
+    axs[1, 0].grid(True)
+    axs[1, 0].legend()
+
+    # Fourth subplot - CAT with Modern
+    axs[1, 1].plot(subset_question_nums, [theta_star] * subset_question_num, label='True Theta', color='black', linestyle='--')
+    axs[1, 1].plot(subset_question_nums, modern_theta_means, label='CAT with modern', color='purple')
     modern_theta_means = jnp.array(modern_theta_means)
     modern_theta_stds = jnp.array(modern_theta_stds)
-    plt.fill_between(subset_question_nums, 
-                     modern_theta_means - 3 * modern_theta_stds, 
-                     modern_theta_means + 3 * modern_theta_stds, 
-                     color='purple', 
-                     alpha=0.2
-                     )
-    
-    plt.xlabel('Number of Questions')
-    plt.ylabel('Theta')
-    plt.title('Theta Estimation vs. Number of Questions')
-    plt.legend()
-    plt.grid(True)
-    plt.savefig('../plot/synthetic/random_adaptive_test.png')
+    axs[1, 1].fill_between(subset_question_nums, 
+                           modern_theta_means - 3 * modern_theta_stds, 
+                           modern_theta_means + 3 * modern_theta_stds, 
+                           color='purple', 
+                           alpha=0.2)
+    axs[1, 1].set_title('CAT with Modern')
+    axs[1, 1].set_ylim([-4, 4])
+    axs[1, 1].grid(True)
+    axs[1, 1].legend()
+
+    # Adjusting the layout and saving the figure
+    for ax in axs.flat:
+        ax.set_xlabel('Number of Questions')
+        ax.set_ylabel('Theta')
+
+    plt.tight_layout()
+    plt.savefig('../plot/synthetic/random_adaptive_test_subplot.png')
+
     
     print("finish!!!")

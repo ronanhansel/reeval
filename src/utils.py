@@ -27,6 +27,21 @@ def calculate_1d_wasserstein_distance(vector1, vector2):
 def calculate_3d_wasserstein_distance(matrix1, matrix2):
     return wasserstein_distance_nd(matrix1, matrix2)
 
+def clear_caches():
+    modules = list(sys.modules.items())  # Create a list of items to avoid runtime errors
+    for module_name, module in modules:
+        if module_name.startswith("jax"):
+            if module_name not in ["jax.interpreters.partial_eval"]:
+                for obj_name in dir(module):
+                    obj = getattr(module, obj_name)
+                    if hasattr(obj, "cache_clear"):
+                        try:
+                            obj.cache_clear()
+                        except:
+                            pass
+    gc.collect()
+    print("cache cleared")
+    
 if __name__ == "__main__":
     print(calculate_1d_wasserstein_distance([0, 1, 3], [5, 6, 8]))
     print(calculate_1d_wasserstein_distance([1, 1, 3], [5, 6, 8]))
