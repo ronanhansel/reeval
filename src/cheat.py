@@ -14,8 +14,9 @@ def model(Z, asked_question_list, asked_answer_list, contamination):
     theta_hat_true = numpyro.sample("theta_hat_true", dist.Normal(0.0, 1.0)) # prior_true
     theta_hat_cheat = numpyro.sample("theta_hat_cheat", dist.Normal(0.0, 1.0)) # prior_cheat
     Z_asked = Z[asked_question_list]
+    contamination_asked = contamination[asked_question_list]
     probs = item_response_fn_1PL_cheat(
-        Z_asked, contamination, theta_hat_true, theta_hat_cheat, datatype="jnp"
+        Z_asked, contamination_asked, theta_hat_true, theta_hat_cheat, datatype="jnp"
         )
     numpyro.sample("obs", dist.Bernoulli(probs), obs=asked_answer_list)
     
