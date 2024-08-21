@@ -23,6 +23,7 @@ def item_response_fn_1PL(z3, theta, datatype="torch"):
 def item_response_fn_1PL_cheat(z3, contamination, theta_true, theta_cheat, datatype="torch"):
     # z3, contamination: vector/scalar; theta_true, theta_cheat: scalar
     bool_cheat = (theta_true < theta_cheat)
+    
     if datatype == "torch":
         return item_response_fn_1PL(z3, theta_true)**(1-bool_cheat) \
             * ((1-contamination) * item_response_fn_1PL(z3, theta_true) \

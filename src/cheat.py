@@ -71,7 +71,7 @@ if __name__ == "__main__":
     for i in range(question_num):
         asked_answer_list_1.append(testtaker1.ask(z3, contamination, i))
         
-    testtaker2 = CheatingTestTaker(true_theta=0.5, cheat_gain=0, model="1PL")
+    testtaker2 = CheatingTestTaker(true_theta=1.5, cheat_gain=0, model="1PL")
     true_theta_2, cheat_theta_2= testtaker2.get_ability()
     print(f"True theta 2: {true_theta_2}")
     print(f"Cheat theta 2: {cheat_theta_2}")
@@ -89,9 +89,10 @@ if __name__ == "__main__":
     asked_answer_list_1 = jnp.array(asked_answer_list_1)
 
     mean_theta_true_1, std_theta_true_1, theta_true_samples_1, \
-        mean_theta_cheat_1, std_theta_cheat_1, theta_cheat_samples_1 = fit_cheat_theta_mcmc(
-        z3, asked_question_list_1, asked_answer_list_1, contamination
-        )
+        mean_theta_cheat_1, std_theta_cheat_1, theta_cheat_samples_1 \
+            = fit_cheat_theta_mcmc(
+                z3, asked_question_list_1, asked_answer_list_1, contamination
+                )
     
     print(f"mean_theta_true_1: {mean_theta_true_1}")
     print(f"std_theta_true_1: {std_theta_true_1}")
@@ -101,9 +102,10 @@ if __name__ == "__main__":
     asked_question_list_2 = jnp.array(asked_question_list_2)
     asked_answer_list_2 = jnp.array(asked_answer_list_2)
     mean_theta_true_2, std_theta_true_2, theta_true_samples_2, \
-        mean_theta_cheat_2, std_theta_cheat_2, theta_cheat_samples_2 = fit_cheat_theta_mcmc(
-        z3, asked_question_list_2, asked_answer_list_2, contamination
-        )
+        mean_theta_cheat_2, std_theta_cheat_2, theta_cheat_samples_2 \
+            = fit_cheat_theta_mcmc(
+                z3, asked_question_list_2, asked_answer_list_2, contamination
+                )
     
     print(f"mean_theta_true_2: {mean_theta_true_2}")
     print(f"std_theta_true_2: {std_theta_true_2}")
@@ -120,7 +122,10 @@ if __name__ == "__main__":
         bernoulli = torch.distributions.Bernoulli(prob_tensor)
         response_1 = bernoulli.sample()
         response_1_list.append(response_1)
-    print(f"CTT theta_1: {sum(response_1_list)/len(response_1_list)}")
+    response_1_std = torch.std(torch.stack(response_1_list))
+    response_1_mean = sum(response_1_list) / len(response_1_list)
+    print(f"CTT theta_1 mean: {response_1_mean}")
+    print(f"CTT theta_1 std: {response_1_std}")
     
     probs = item_response_fn_1PL_cheat(
         z3, contamination, true_theta_2, cheat_theta_2, datatype="jnp"
@@ -131,8 +136,11 @@ if __name__ == "__main__":
         bernoulli = torch.distributions.Bernoulli(prob_tensor)
         response_2 = bernoulli.sample()
         response_2_list.append(response_2)
-    print(f"CTT theta_2: {sum(response_2_list)/len(response_2_list)}")
-    
+    response_2_mean = sum(response_2_list) / len(response_2_list)
+    response_2_std = torch.std(torch.stack(response_2_list))
+    print(f"CTT theta_2 mean: {response_2_mean}")
+    print(f"CTT theta_2 std: {response_2_std}")
+
     plt.figure(figsize=(12, 6))
 
     # Plotting theta_hat_true samples
