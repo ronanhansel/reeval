@@ -14,7 +14,7 @@ def beta_params_from_mode(mode, concentration=10):
     return alpha, beta_param
 
 if __name__ == "__main__":
-    torch.manual_seed(10)
+    torch.manual_seed(42)
     
     Y_bar = 0.7
     theta_1 = 1
@@ -88,7 +88,10 @@ if __name__ == "__main__":
         bernoulli = torch.distributions.Bernoulli(prob_tensor)
         response_1 = bernoulli.sample()
         response_1_list.append(response_1)
-    print(f"CTT theta_1: {sum(response_1_list)/len(response_1_list)}")
+    response_1_mean = sum(response_1_list) / len(response_1_list)
+    response_1_std = torch.std(torch.stack(response_1_list))
+    print(f"CTT theta_1 mean: {response_1_mean}")
+    print(f"CTT theta_1 std: {response_1_std}")
     
     probs = item_response_fn_1PL(Z_2, theta_2, datatype="jnp")
     response_2_list = []
@@ -97,4 +100,7 @@ if __name__ == "__main__":
         bernoulli = torch.distributions.Bernoulli(prob_tensor)
         response_2 = bernoulli.sample()
         response_2_list.append(response_2)
-    print(f"CTT theta_2: {sum(response_2_list)/len(response_2_list)}")
+    response_2_mean = sum(response_2_list) / len(response_2_list)
+    response_2_std = torch.std(torch.stack(response_2_list))
+    print(f"CTT theta_2 mean: {response_2_mean}")
+    print(f"CTT theta_2 std: {response_2_std}")
