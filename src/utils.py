@@ -31,8 +31,7 @@ def item_response_fn_1PL_cheat(z3, contamination, theta_true, theta_cheat, datat
     elif datatype == "jnp":
         return item_response_fn_1PL(z3, theta_true, datatype="jnp")**(1-bool_cheat) \
             * ((1-contamination) * item_response_fn_1PL(z3, theta_true, datatype="jnp") \
-            + contamination * item_response_fn_1PL(z3, theta_cheat, datatype="jnp"))**bool_cheat
-        
+            + contamination * item_response_fn_1PL(z3, theta_cheat, datatype="jnp"))**bool_cheat        
 
 def calculate_1d_wasserstein_distance(vector1, vector2):
     return wasserstein_distance(vector1, vector2)

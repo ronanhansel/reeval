@@ -19,7 +19,7 @@ def model(Z, asked_question_list, asked_answer_list, contamination):
         Z_asked, contamination_asked, theta_hat_true, theta_hat_cheat, datatype="jnp"
         )
     numpyro.sample("obs", dist.Bernoulli(probs), obs=asked_answer_list)
-    
+
 def fit_cheat_theta_mcmc(
     Z, asked_question_list, asked_answer_list, contamination, num_samples=9000, num_warmup=1000
     ):
@@ -61,7 +61,7 @@ if __name__ == "__main__":
         ])
     contamination = contamination[torch.randperm(question_num)]
     
-    testtaker1 = CheatingTestTaker(true_theta=0.5, cheat_gain=1, model="1PL")
+    testtaker1 = CheatingTestTaker(true_theta=0, cheat_gain=1.5, model="1PL")
     true_theta_1, cheat_theta_1 = testtaker1.get_ability()
     print(f"True theta 1: {true_theta_1}")
     print(f"Cheat theta 1: {cheat_theta_1}")
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     for i in range(question_num):
         asked_answer_list_1.append(testtaker1.ask(z3, contamination, i))
         
-    testtaker2 = CheatingTestTaker(true_theta=1.5, cheat_gain=0, model="1PL")
+    testtaker2 = CheatingTestTaker(true_theta=-0.5, cheat_gain=2, model="1PL")
     true_theta_2, cheat_theta_2= testtaker2.get_ability()
     print(f"True theta 2: {true_theta_2}")
     print(f"Cheat theta 2: {cheat_theta_2}")
@@ -87,7 +87,7 @@ if __name__ == "__main__":
     
     asked_question_list_1 = jnp.array(asked_question_list_1)
     asked_answer_list_1 = jnp.array(asked_answer_list_1)
-
+    
     mean_theta_true_1, std_theta_true_1, theta_true_samples_1, \
         mean_theta_cheat_1, std_theta_cheat_1, theta_cheat_samples_1 \
             = fit_cheat_theta_mcmc(
@@ -143,22 +143,22 @@ if __name__ == "__main__":
 
     plt.figure(figsize=(12, 6))
 
-    # Plotting theta_hat_true samples
+    # Plotting samples for Test Taker 1
     plt.subplot(1, 2, 1)
-    plt.hist(theta_true_samples_1, bins=30, density=True, alpha=0.6, color='blue', label='Theta True - Test Taker 1')
-    plt.hist(theta_true_samples_2, bins=30, density=True, alpha=0.6, color='green', label='Theta True - Test Taker 2')
-    plt.title('Histogram of True Theta Samples')
+    plt.hist(theta_true_samples_1, bins=30, density=True, alpha=0.6, color='blue', label='Theta True')
+    plt.hist(theta_cheat_samples_1, bins=30, density=True, alpha=0.6, color='red', label='Theta Cheat')
+    plt.title('Histogram of Theta Samples - Test Taker 1')
     plt.xlabel('Theta')
     plt.ylabel('Density')
     plt.legend()
 
-    # Plotting theta_hat_cheat samples
+    # Plotting samples for Test Taker 2
     plt.subplot(1, 2, 2)
-    plt.hist(theta_cheat_samples_1, bins=30, density=True, alpha=0.6, color='blue', label='Theta Cheat - Test Taker 1')
-    plt.hist(theta_cheat_samples_2, bins=30, density=True, alpha=0.6, color='green', label='Theta Cheat - Test Taker 2')
-    plt.title('Histogram of Cheat Theta Samples')
+    plt.hist(theta_true_samples_2, bins=30, density=True, alpha=0.6, color='green', label='Theta True')
+    plt.hist(theta_cheat_samples_2, bins=30, density=True, alpha=0.6, color='orange', label='Theta Cheat')
+    plt.title('Histogram of Theta Samples - Test Taker 2')
     plt.xlabel('Theta')
     plt.ylabel('Density')
     plt.legend()
 
-    plt.savefig('../plot/synthetic/cheat.png')
+    plt.savefig('../plot/synthetic/cheat_by_testtaker.png')
