@@ -118,7 +118,7 @@ if __name__ == "__main__":
     # Plotting samples for Test Taker 1
     plt.subplot(1, 2, 1)
     plt.hist(theta_true_samples, bins=30, density=True, alpha=0.6, color='blue', label='Theta True')
-    plt.hist(theta_cheat_samples, bins=30, density=True, alpha=0.6, color='red', label='Theta Cheat')
+    plt.hist(theta_cheat_samples, bins=30, density=True, alpha=0.6, color='green', label='Theta Cheat')
     plt.title('Histogram of Theta Samples')
     plt.xlabel('Theta')
     plt.ylabel('Density')

@@ -1,14 +1,8 @@
-import gc
-import sys
-import pandas as pd
-import matplotlib.pyplot as plt
-import psutil
 import torch
 import random
 from synthetic_testtaker import SimulatedTestTaker
 from fit_theta import fit_theta_mcmc
 import jax.numpy as jnp
-
 from utils import item_response_fn_1PL, clear_caches, set_seed, save_state, load_state
 import numpy as np
 from argparse import ArgumentParser
@@ -34,7 +28,7 @@ def CAT_fisher(z3, unasked_question_list, theta_mean):
     index_with_max_fisher_info = torch.argmax(torch.tensor(fisher_info_list)).item()
     return unasked_question_list[index_with_max_fisher_info]
 
-def CAT_modern(z3, unasked_question_list, theta_samples):
+def CAT_efisher(z3, unasked_question_list, theta_samples):
     theta_samples_tensor = torch.tensor(np.array(theta_samples))
     fisher_info_list = []
     for unasked_question_index in unasked_question_list:
@@ -43,8 +37,8 @@ def CAT_modern(z3, unasked_question_list, theta_samples):
         prob = item_response_fn_1PL(z_single_expanded, theta_samples_tensor)
         hessian = prob * (1 - prob)
         fisher_info_list.append(hessian.mean())
-    unasked_question_index_with_max_fisher_info = torch.argmax(torch.tensor(fisher_info_list)).item()
-    return unasked_question_list[unasked_question_index_with_max_fisher_info]
+    index_with_max_fisher_info = torch.argmax(torch.tensor(fisher_info_list)).item()
+    return unasked_question_list[index_with_max_fisher_info]
     
 def main(question_num, new_testtaker, strategy, subset_question_num, warmup, state_dir):
     print(f'strategy: {strategy}')
@@ -107,8 +101,8 @@ def main(question_num, new_testtaker, strategy, subset_question_num, warmup, sta
             new_question_index = CAT_owen(z3, unasked_question_list, mean_theta)
         elif strategy=="fisher":
             new_question_index = CAT_fisher(z3, unasked_question_list, mean_theta)
-        elif strategy=="modern":
-            new_question_index = CAT_modern(z3, unasked_question_list, theta_samples)
+        elif strategy=="efisher":
+            new_question_index = CAT_efisher(z3, unasked_question_list, theta_samples)
         else:
             raise ValueError("strategy not supported")
         
