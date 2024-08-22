@@ -5,15 +5,15 @@ import os
 
 if __name__ == '__main__':
     state_dir = "../data/synthetic/CAT"
-    question_num = 100000
-    theta_star = 1.25
+    question_num = 10000
+    theta_star = 0
     strategy_list = ['random', 'fisher', 'owen', 'efisher']
 
     fig, axs = plt.subplots(2, 2, figsize=(14, 10))
     axs = axs.flatten()
     
     for i, strategy in enumerate(strategy_list):
-        state_path = os.path.join(state_dir, f"{strategy}_{question_num}.pt")
+        state_path = os.path.join(state_dir, f"{strategy}_{question_num}_{theta_star}.pt")
         state = load_state(state_path)
         
         if state:

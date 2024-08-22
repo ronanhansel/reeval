@@ -44,8 +44,9 @@ def main(question_num, new_testtaker, strategy, subset_question_num, warmup, sta
     print(f'strategy: {strategy}')
     print(f'question_num: {question_num}')
     print(f'subset_question_num: {subset_question_num}')
+    true_theta = new_testtaker.get_ability()
     
-    state_path = os.path.join(state_dir, f"{strategy}_{question_num}.pt")
+    state_path = os.path.join(state_dir, f"{strategy}_{question_num}_{true_theta}.pt")
     state = load_state(state_path)
     if state:
         z3 = state['z3']
@@ -124,8 +125,6 @@ def main(question_num, new_testtaker, strategy, subset_question_num, warmup, sta
         
         clear_caches()
         
-        
-
 if __name__ == "__main__":
     # debug python CAT.py --subset_question_num 5
     
@@ -133,13 +132,14 @@ if __name__ == "__main__":
     parser.add_argument("--seed", type=int, default=10)
     parser.add_argument("--algo", type=str, default="fisher")
     parser.add_argument("--question_num", type=int, default=10000)
-    parser.add_argument("--subset_question_num", type=int, default=1000)
-    parser.add_argument("--warmup", type=int, default=100)
+    parser.add_argument("--subset_question_num", type=int, default=50)
+    parser.add_argument("--warmup", type=int, default=0)
+    parser.add_argument("--true_theta", type=int, default=0)
     args = parser.parse_args()
 
     set_seed(args.seed)
 
-    new_testtaker = SimulatedTestTaker(theta=1.25, model="1PL")
+    new_testtaker = SimulatedTestTaker(theta=args.true_theta, model="1PL")
     state_dir = "../data/synthetic/CAT"
 
     main(
