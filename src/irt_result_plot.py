@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
 
     # run mirt.R
-    subprocess.run("conda run -n R Rscript fit_irt.R real", shell=True, check=True)
+    subprocess.run(f"conda run -n R Rscript fit_irt.R {experiment_type}", shell=True, check=True)
     
     # clean up item parameters inferred from IRT
     for filename in os.listdir(Z_dir):
