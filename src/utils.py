@@ -23,6 +23,19 @@ def item_response_fn_1PL(z3, theta, datatype="torch"):
         return 1 / (1 + jnp.exp(-(theta + z3)))
     else:
         raise ValueError("datatype should be 'torch' or 'numpy' or 'jnp'")
+    
+def item_response_fn_1PL_cheat(z3, contamination, theta_true, theta_cheat, datatype="torch"):
+    # z3, contamination: vector/scalar; theta_true, theta_cheat: scalar
+    bool_cheat = (theta_true < theta_cheat)
+    
+    if datatype == "torch":
+        return item_response_fn_1PL(z3, theta_true)**(1-bool_cheat) \
+            * ((1-contamination) * item_response_fn_1PL(z3, theta_true) \
+            + contamination * item_response_fn_1PL(z3, theta_cheat))**bool_cheat
+    elif datatype == "jnp":
+        return item_response_fn_1PL(z3, theta_true, datatype="jnp")**(1-bool_cheat) \
+            * ((1-contamination) * item_response_fn_1PL(z3, theta_true, datatype="jnp") \
+            + contamination * item_response_fn_1PL(z3, theta_cheat, datatype="jnp"))**bool_cheat        
 
 def calculate_1d_wasserstein_distance(vector1, vector2):
     return wasserstein_distance(vector1, vector2)
