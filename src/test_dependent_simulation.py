@@ -1,9 +1,10 @@
+from argparse import ArgumentParser
 import torch
 from synthetic_testtaker import SimulatedTestTaker
 from fit_theta import fit_theta_mcmc
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
-from utils import item_response_fn_1PL
+from utils import item_response_fn_1PL, set_seed
 
 def inverse_item_response_fn_1PL(y,theta):
     return -theta - torch.log((1 - y) / y)
@@ -14,31 +15,34 @@ def beta_params_from_mode(mode, concentration=10):
     return alpha, beta_param
 
 if __name__ == "__main__":
-    torch.manual_seed(42)
-    
-    Y_bar = 0.7
-    theta_1 = 1
-    theta_2 = 2
-    question_num = 1000
+    parser = ArgumentParser()
+    parser.add_argument("--seed", type=int, default=10)
+    parser.add_argument("--question_num", type=int, default=1000)
+    parser.add_argument("--Y_bar", type=float, default=0.7)
+    parser.add_argument("--theta_1", type=float, default=1)
+    parser.add_argument("--theta_2", type=float, default=2)
+    args = parser.parse_args()
 
-    alpha, beta = beta_params_from_mode(Y_bar)
+    set_seed(args.seed)
+
+    alpha, beta = beta_params_from_mode(args.Y_bar)
     beta_dist = torch.distributions.Beta(alpha, beta)
-    Y = beta_dist.sample((question_num,))
+    Y = beta_dist.sample((args.question_num,))
 
-    Z_1 = inverse_item_response_fn_1PL(Y, theta_1)
-    Z_2 = inverse_item_response_fn_1PL(Y, theta_2)
+    Z_1 = inverse_item_response_fn_1PL(Y, args.theta_1)
+    Z_2 = inverse_item_response_fn_1PL(Y, args.theta_2)
 
-    testtaker1 = SimulatedTestTaker(theta=theta_1, model="1PL")
-    testtaker2 = SimulatedTestTaker(theta=theta_2, model="1PL")
+    testtaker1 = SimulatedTestTaker(theta=args.theta_1, model="1PL")
+    testtaker2 = SimulatedTestTaker(theta=args.theta_2, model="1PL")
     
-    asked_question_list = list(range(question_num))
+    asked_question_list = list(range(args.question_num))
     
     asked_answer_list_1 = []
-    for i in range(question_num):
+    for i in range(args.question_num):
         asked_answer_list_1.append(testtaker1.ask(Z_1, i))
     
     asked_answer_list_2 = []
-    for i in range(question_num):
+    for i in range(args.question_num):
         asked_answer_list_2.append(testtaker2.ask(Z_2, i))
     
     # MCMC
@@ -81,7 +85,7 @@ if __name__ == "__main__":
     
     
     # CTT
-    probs = item_response_fn_1PL(Z_1, theta_1, datatype="jnp")
+    probs = item_response_fn_1PL(Z_1, args.theta_1, datatype="jnp")
     response_1_list = []
     for prob in probs:
         prob_tensor = torch.tensor(prob.tolist())
@@ -93,7 +97,7 @@ if __name__ == "__main__":
     print(f"CTT theta_1 mean: {response_1_mean}")
     print(f"CTT theta_1 std: {response_1_std}")
     
-    probs = item_response_fn_1PL(Z_2, theta_2, datatype="jnp")
+    probs = item_response_fn_1PL(Z_2, args.theta_2, datatype="jnp")
     response_2_list = []
     for prob in probs:
         prob_tensor = torch.tensor(prob.tolist())
