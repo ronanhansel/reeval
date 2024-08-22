@@ -8,5 +8,10 @@ __pycache__/
 data/
 plot/
 *.csv
-*.txt
 *.png
+*.log
+CAT_random.py
+CAT_plot.py
+CAT_modern.py
+CAT_owen.py
+CAT_fisher.py

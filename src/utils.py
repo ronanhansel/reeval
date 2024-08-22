@@ -2,6 +2,10 @@ import torch
 import numpy as np
 from scipy.stats import wasserstein_distance, wasserstein_distance_nd
 import jax.numpy as jnp
+import random
+import gc
+import sys
+import os
 
 # overleaf/R_library: z1/g, z2/a1, z3/d
 def item_response_fn_3PL(z1, z2, z3, theta):
@@ -19,14 +23,63 @@ def item_response_fn_1PL(z3, theta, datatype="torch"):
         return 1 / (1 + jnp.exp(-(theta + z3)))
     else:
         raise ValueError("datatype should be 'torch' or 'numpy' or 'jnp'")
+    
+def item_response_fn_1PL_cheat(z3, contamination, theta_true, theta_cheat, datatype="torch"):
+    # z3, contamination: vector/scalar; theta_true, theta_cheat: scalar
+    bool_cheat = (theta_true < theta_cheat)
+    
+    if datatype == "torch":
+        return item_response_fn_1PL(z3, theta_true)**(1-bool_cheat) \
+            * ((1-contamination) * item_response_fn_1PL(z3, theta_true) \
+            + contamination * item_response_fn_1PL(z3, theta_cheat))**bool_cheat
+    elif datatype == "jnp":
+        return item_response_fn_1PL(z3, theta_true, datatype="jnp")**(1-bool_cheat) \
+            * ((1-contamination) * item_response_fn_1PL(z3, theta_true, datatype="jnp") \
+            + contamination * item_response_fn_1PL(z3, theta_cheat, datatype="jnp"))**bool_cheat        
 
 def calculate_1d_wasserstein_distance(vector1, vector2):
     return wasserstein_distance(vector1, vector2)
 
-# 3D Wasserstein Distance
 def calculate_3d_wasserstein_distance(matrix1, matrix2):
     return wasserstein_distance_nd(matrix1, matrix2)
 
+def clear_caches():
+    modules = list(sys.modules.items())  # Create a list of items to avoid runtime errors
+    for module_name, module in modules:
+        if module_name.startswith("jax"):
+            if module_name not in ["jax.interpreters.partial_eval"]:
+                for obj_name in dir(module):
+                    obj = getattr(module, obj_name)
+                    if hasattr(obj, "cache_clear"):
+                        try:
+                            obj.cache_clear()
+                        except:
+                            pass
+    gc.collect()
+    print("cache cleared")
+    
+def set_seed(seed):
+    random.seed(seed)
+    # torch.backends.cudnn.deterministic=True
+    # torch.backends.cudnn.benchmark = False
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.cuda.manual_seed_all(seed)
+    
+def save_state(filepath, **kwargs):
+    torch.save(kwargs, filepath)
+    print(f"State saved to {filepath}")
+
+def load_state(filepath):
+    if os.path.exists(filepath):
+        state = torch.load(filepath)
+        print(f"State loaded from {filepath}")
+        return state
+    else:
+        print(f"No previous state found at {filepath}")
+        return None
+    
 if __name__ == "__main__":
     print(calculate_1d_wasserstein_distance([0, 1, 3], [5, 6, 8]))
     print(calculate_1d_wasserstein_distance([1, 1, 3], [5, 6, 8]))

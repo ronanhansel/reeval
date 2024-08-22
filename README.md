@@ -5,7 +5,6 @@ conda activate certify
 pip install -r requirements.txt
 
 conda env create -f R.yml
-
 ```
 
 create a .env file
@@ -14,8 +13,6 @@ OPENAI_KEY = '...'
 TOGETHERAI_KEY = '...'
 HF_TOKEN = '...'
 ```
-
-
 
 # vllm query for more testtakers
 
