@@ -2,6 +2,10 @@ import torch
 import numpy as np
 from scipy.stats import wasserstein_distance, wasserstein_distance_nd
 import jax.numpy as jnp
+import random
+import gc
+import sys
+import os
 
 # overleaf/R_library: z1/g, z2/a1, z3/d
 def item_response_fn_3PL(z1, z2, z3, theta):
@@ -26,6 +30,43 @@ def calculate_1d_wasserstein_distance(vector1, vector2):
 def calculate_3d_wasserstein_distance(matrix1, matrix2):
     return wasserstein_distance_nd(matrix1, matrix2)
 
+def clear_caches():
+    modules = list(sys.modules.items())  # Create a list of items to avoid runtime errors
+    for module_name, module in modules:
+        if module_name.startswith("jax"):
+            if module_name not in ["jax.interpreters.partial_eval"]:
+                for obj_name in dir(module):
+                    obj = getattr(module, obj_name)
+                    if hasattr(obj, "cache_clear"):
+                        try:
+                            obj.cache_clear()
+                        except:
+                            pass
+    gc.collect()
+    print("cache cleared")
+    
+def set_seed(seed):
+    random.seed(seed)
+    # torch.backends.cudnn.deterministic=True
+    # torch.backends.cudnn.benchmark = False
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.cuda.manual_seed_all(seed)
+    
+def save_state(filepath, **kwargs):
+    torch.save(kwargs, filepath)
+    print(f"State saved to {filepath}")
+
+def load_state(filepath):
+    if os.path.exists(filepath):
+        state = torch.load(filepath)
+        print(f"State loaded from {filepath}")
+        return state
+    else:
+        print(f"No previous state found at {filepath}")
+        return None
+    
 if __name__ == "__main__":
     print(calculate_1d_wasserstein_distance([0, 1, 3], [5, 6, 8]))
     print(calculate_1d_wasserstein_distance([1, 1, 3], [5, 6, 8]))

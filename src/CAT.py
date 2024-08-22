@@ -8,26 +8,14 @@ import random
 from synthetic_testtaker import SimulatedTestTaker
 from fit_theta import fit_theta_mcmc
 import jax.numpy as jnp
-from utils import item_response_fn_1PL
+
+from utils import item_response_fn_1PL, clear_caches, set_seed, save_state, load_state
 import numpy as np
+from argparse import ArgumentParser
+import os
 
 # export JAX_PLATFORM_NAME=cpu
 # nohup python CAT.py > /scratch/yuhengtu/workspace/certified-eval/src/CAT.log 2>&1 &
-
-def clear_caches():
-    modules = list(sys.modules.items())  # Create a list of items to avoid runtime errors
-    for module_name, module in modules:
-        if module_name.startswith("jax"):
-            if module_name not in ["jax.interpreters.partial_eval"]:
-                for obj_name in dir(module):
-                    obj = getattr(module, obj_name)
-                    if hasattr(obj, "cache_clear"):
-                        try:
-                            obj.cache_clear()
-                        except:
-                            pass
-    gc.collect()
-    print("cache cleared")
   
 def CAT_owen(z3, unasked_question_list, theta_mean):
     z3_unasked = z3[unasked_question_list]
@@ -37,88 +25,73 @@ def CAT_owen(z3, unasked_question_list, theta_mean):
 
 def CAT_fisher(z3, unasked_question_list, theta_mean):
     fisher_info_list = []
-    
     for unasked_question_index in unasked_question_list:
         theta = torch.tensor(theta_mean.item(), requires_grad=True)
-        z_single = z3[unasked_question_index].clone().detach()
-        
+        z_single = z3[unasked_question_index].clone().detach()    
         prob = item_response_fn_1PL(z_single, theta)
         hessian = prob * (1 - prob)
         fisher_info_list.append(hessian)
-        
-        # bernoulli = torch.distributions.Bernoulli(prob)
-        # sample = bernoulli.sample((1,))
-        # log_prob = bernoulli.log_prob(sample)
-        # grad = torch.autograd.grad(log_prob, theta, create_graph=True, retain_graph=True)[0]
-        # hessian = torch.autograd.grad(grad, theta, retain_graph=True)[0]
-        # fisher_info_list.append((-1)*hessian)
-        
-        # samples_Y = bernoulli.sample((100,))
-        # hessian_list = [] # doesn't depend on sample_y
-        # for sample_y in samples_Y:
-        #     if theta.grad is not None:
-        #         theta.grad.zero_() 
-        #     log_prob = bernoulli.log_prob(sample_y)
-        #     grad = torch.autograd.grad(log_prob, theta, create_graph=True, retain_graph=True)[0]
-        #     hessian = torch.autograd.grad(grad, theta, retain_graph=True)[0]
-        #     hessian_list.append(hessian)
-        # fisher_info = (-1) * torch.tensor(hessian_list).mean()
-        # fisher_info_list.append(fisher_info)
-
-    unasked_question_index_with_max_fisher_info = torch.argmax(torch.tensor(fisher_info_list)).item()
-    return unasked_question_list[unasked_question_index_with_max_fisher_info]
+    index_with_max_fisher_info = torch.argmax(torch.tensor(fisher_info_list)).item()
+    return unasked_question_list[index_with_max_fisher_info]
 
 def CAT_modern(z3, unasked_question_list, theta_samples):
     theta_samples_tensor = torch.tensor(np.array(theta_samples))
     fisher_info_list = []
     for unasked_question_index in unasked_question_list:
-        # fisher_info_samples = []
-        # for theta_sample in theta_samples:
-        #     theta = torch.tensor(theta_sample.item(), requires_grad=True)
-        #     z_single = z3[unasked_question_index].clone().detach()
-        #     prob = item_response_fn_1PL(z_single, theta)
-        #     # bernoulli = torch.distributions.Bernoulli(prob)
-        #     # sample = bernoulli.sample((1,))
-        #     # log_prob = bernoulli.log_prob(sample)
-        #     # grad = torch.autograd.grad(log_prob, theta, create_graph=True, retain_graph=True)[0]
-        #     # hessian = torch.autograd.grad(grad, theta, retain_graph=True)[0]
-        #     hessian = prob * (1 - prob)
-        #     fisher_info_samples.append((-1)*hessian)
-        # fisher_info_list.append(torch.tensor(fisher_info_samples).mean())
-        
         z_single = z3[unasked_question_index].clone().detach()
         z_single_expanded = z_single.expand(theta_samples_tensor.shape[0])
         prob = item_response_fn_1PL(z_single_expanded, theta_samples_tensor)
         hessian = prob * (1 - prob)
         fisher_info_list.append(hessian.mean())
-        
     unasked_question_index_with_max_fisher_info = torch.argmax(torch.tensor(fisher_info_list)).item()
     return unasked_question_list[unasked_question_index_with_max_fisher_info]
     
-def main(z3, new_testtaker, strategy, subset_question_num):
+def main(question_num, new_testtaker, strategy, subset_question_num, warmup, state_dir):
     print(f'strategy: {strategy}')
-
-    question_num = len(z3)
-
-    init_question_index = random.randint(0, question_num - 1)
-    init_answer = new_testtaker.ask(z3, init_question_index)
-
-    unasked_question_list = [i for i in range(question_num)]
-    unasked_question_list.remove(init_question_index)
-    asked_question_list = [init_question_index]
-    asked_answer_list = [init_answer.float()]
-    asked_z3_list = [z3[init_question_index]]
-
-    theta_means = []
-    theta_stds = []
-    for epoch in range(subset_question_num):
+    print(f'question_num: {question_num}')
+    print(f'subset_question_num: {subset_question_num}')
+    
+    state_path = os.path.join(state_dir, f"{strategy}_{question_num}.pt")
+    state = load_state(state_path)
+    if state:
+        z3 = state['z3']
+        asked_question_list = state['asked_question_list']
+        unasked_question_list = state['unasked_question_list']
+        asked_answer_list = state['asked_answer_list']
+        theta_means = state['theta_means']
+        theta_stds = state['theta_stds']
+        start_epoch = state['epoch'] + 1
+    
+    else:
+        if warmup > 0:
+            print(f'doing warmup: {warmup}')
+            z3 = torch.normal(mean=0.0, std=1.0, size=(question_num,))
+            asked_question_list = random.sample(range(question_num), warmup)
+            unasked_question_list = [i for i in range(question_num) if i not in asked_question_list]
+            asked_answer_list = [new_testtaker.ask(z3, i).float() for i in asked_question_list]
+            theta_means = []
+            theta_stds = []
+            start_epoch = 0
+        
+        else:
+            print(f'not doing warmup')
+            z3 = torch.normal(mean=0.0, std=1.0, size=(question_num,))
+            init_question_index = random.randint(0, question_num - 1)
+            asked_question_list = [init_question_index]
+            unasked_question_list = [i for i in range(question_num) if i != init_question_index]
+            asked_answer_list = [new_testtaker.ask(z3, init_question_index).float()]
+            theta_means = []
+            theta_stds = []
+            start_epoch = 0
+            
+    for epoch in range(start_epoch, subset_question_num):
         print(f'\nepoch: {epoch+1}')
         asked_question_jnp = jnp.array(asked_question_list)
         asked_answer_jnp = jnp.array(asked_answer_list)
-        asked_z3_jnp = jnp.array(asked_z3_list)
-        
+        z3_jnp = jnp.array(z3)
+
         mean_theta, std_theta, theta_samples = fit_theta_mcmc(
-            asked_z3_jnp, 
+            z3_jnp, 
             asked_question_jnp, 
             asked_answer_jnp
             )
@@ -143,88 +116,43 @@ def main(z3, new_testtaker, strategy, subset_question_num):
         unasked_question_list.remove(new_question_index)
         asked_question_list.append(new_question_index)
         asked_answer_list.append(new_answer.float())
-        asked_z3_list.append(z3[new_question_index])
+        
+        save_state(
+            state_path, 
+            z3 = z3,
+            asked_question_list=asked_question_list, 
+            unasked_question_list=unasked_question_list,
+            asked_answer_list=asked_answer_list, 
+            theta_means=theta_means, 
+            theta_stds=theta_stds,
+            epoch=epoch
+            )
         
         clear_caches()
         
-    return theta_means, theta_stds
+        
 
 if __name__ == "__main__":
-    torch.manual_seed(10)
+    # debug python CAT.py --subset_question_num 5
     
-    # df = pd.read_csv(
-    #     '../data/synthetic/irt_result/Z/synthetic_1PL_Z_clean.csv'
-    #     )
-    # z3 = torch.tensor(df.iloc[:, -1].tolist())
-    # question_num = len(z3)
-    
-    question_num = 10
-    z3 = torch.normal(mean=0.0, std=1.0, size=(question_num,))
-    
-    print(f'num of total questions: {question_num}')
-    
+    parser = ArgumentParser()
+    parser.add_argument("--seed", type=int, default=10)
+    parser.add_argument("--algo", type=str, default="fisher")
+    parser.add_argument("--question_num", type=int, default=10000)
+    parser.add_argument("--subset_question_num", type=int, default=1000)
+    parser.add_argument("--warmup", type=int, default=100)
+    args = parser.parse_args()
+
+    set_seed(args.seed)
+
     new_testtaker = SimulatedTestTaker(theta=1.25, model="1PL")
-    theta_star = new_testtaker.get_ability()
-    print(f"True theta: {theta_star}")
+    state_dir = "../data/synthetic/CAT"
 
-    subset_question_num = 5
-    random_theta_means, random_theta_stds = main(z3, new_testtaker, strategy="random", subset_question_num=subset_question_num)
-    owen_theta_means, owen_theta_stds = main(z3, new_testtaker, strategy="owen", subset_question_num=subset_question_num)
-    fisher_theta_means, fisher_theta_stds = main(z3, new_testtaker, strategy="fisher", subset_question_num=subset_question_num)
-    modern_theta_means, modern_theta_stds = main(z3, new_testtaker, strategy="modern", subset_question_num=subset_question_num)
-    
-    total_question_nums = range(question_num)
-    subset_question_nums = range(subset_question_num)
-    
-    plt.figure(figsize=(10, 6))
-    plt.plot(subset_question_nums, [theta_star] * subset_question_num, label='True Theta', color='black', linestyle='--')
-    
-    plt.plot(subset_question_nums, random_theta_means, label='Random Testing', color='blue')
-    random_theta_means = jnp.array(random_theta_means)
-    random_theta_stds = jnp.array(random_theta_stds)
-    plt.fill_between(
-        subset_question_nums, 
-        random_theta_means - 3 * random_theta_stds, 
-        random_theta_means + 3 * random_theta_stds, 
-        color='blue', 
-        alpha=0.2
-    )
-    
-    plt.plot(subset_question_nums, owen_theta_means, label='CAT with owen', color='green')
-    owen_theta_means = jnp.array(owen_theta_means)
-    owen_theta_stds = jnp.array(owen_theta_stds)
-    plt.fill_between(subset_question_nums, 
-                     owen_theta_means - 3 * owen_theta_stds, 
-                     owen_theta_means + 3 * owen_theta_stds, 
-                     color='green', 
-                     alpha=0.2
-                     )
-
-    plt.plot(subset_question_nums, fisher_theta_means, label='CAT with fisher', color='red')
-    fisher_theta_means = jnp.array(fisher_theta_means)
-    fisher_theta_stds = jnp.array(fisher_theta_stds)
-    plt.fill_between(subset_question_nums, 
-                     fisher_theta_means - 3 * fisher_theta_stds, 
-                     fisher_theta_means + 3 * fisher_theta_stds, 
-                     color='red', 
-                     alpha=0.2
-                     )
-
-    plt.plot(subset_question_nums, modern_theta_means, label='CAT with modern', color='purple')
-    modern_theta_means = jnp.array(modern_theta_means)
-    modern_theta_stds = jnp.array(modern_theta_stds)
-    plt.fill_between(subset_question_nums, 
-                     modern_theta_means - 3 * modern_theta_stds, 
-                     modern_theta_means + 3 * modern_theta_stds, 
-                     color='purple', 
-                     alpha=0.2
-                     )
-    
-    plt.xlabel('Number of Questions')
-    plt.ylabel('Theta')
-    plt.title('Theta Estimation vs. Number of Questions')
-    plt.legend()
-    plt.grid(True)
-    plt.savefig('../plot/synthetic/random_adaptive_test.png')
-    
-    print("finish!!!")
+    main(
+        question_num=args.question_num, 
+        new_testtaker=new_testtaker, 
+        strategy=args.algo, 
+        subset_question_num=args.subset_question_num, 
+        warmup=args.warmup,
+        state_dir = state_dir
+        )
