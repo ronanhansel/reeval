@@ -11,7 +11,8 @@ if __name__ == "__main__":
     theta_star = new_testtaker.get_ability()
     print(f"True theta: {theta_star}")
     
-    max_question_num = 50000
+    max_question_num = 5
+    # max_question_num = 50000
     z3 = torch.normal(mean=0.0, std=1.0, size=(max_question_num,))
     asked_question_list = list(range(max_question_num))
     asked_answer_list = []
@@ -20,9 +21,15 @@ if __name__ == "__main__":
     
     theta_means = []
     theta_stds = []
-    question_nums = range(200, max_question_num+1, 200)
+    # question_nums = range(200, max_question_num+1, 200)
+    question_nums = range(1, 6)
     for question_num in question_nums:
         print(f'Question Num: {question_num}')
+        
+        print(f'Asked Questions: {asked_question_list[:question_num]}')
+        print(f'Asked Answers: {asked_answer_list[:question_num]}')
+        print(f'Asked z3: {z3[:question_num]}')
+        
         asked_question_list_subset = jnp.array(asked_question_list[:question_num])
         asked_answer_list_subset = jnp.array(asked_answer_list[:question_num])
         z3_subset = jnp.array(z3[:question_num])

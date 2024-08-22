@@ -1,9 +1,14 @@
+import gc
+import sys
 import pandas as pd
+import matplotlib.pyplot as plt
+import psutil
 import torch
 import random
 from synthetic_testtaker import SimulatedTestTaker
 from fit_theta import fit_theta_mcmc
 import jax.numpy as jnp
+
 from utils import item_response_fn_1PL, clear_caches, set_seed, save_state, load_state
 import numpy as np
 from argparse import ArgumentParser
