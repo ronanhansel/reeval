@@ -122,15 +122,8 @@ if __name__ == "__main__":
     asked_answer_list = jnp.array(asked_answer_list)
     z3 = jnp.array(z3)
 
-    theta_samples_list = []
-    
-    mean_theta, std_theta, theta_samples = fit_theta_mcmc_key(42, z3, asked_question_list, asked_answer_list)
-    theta_samples_list.append(theta_samples)
-    print(f"mcmc theta mean: {mean_theta}")
-    print(f"mcmc theta std: {std_theta}")
-    
-    mean_theta, std_theta, theta_samples = fit_theta_mcmc_key(43, z3, asked_question_list, asked_answer_list)
-    theta_samples_list.append(theta_samples)
+    mean_theta, std_theta, _ = fit_theta_mcmc(z3, asked_question_list, asked_answer_list)
+
     print(f"mcmc theta mean: {mean_theta}")
     print(f"mcmc theta std: {std_theta}")
     
