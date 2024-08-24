@@ -1,13 +1,13 @@
 from argparse import ArgumentParser
+import os
+import numpy as np
 import numpyro
 import numpyro.distributions as dist
 from numpyro.infer import MCMC, NUTS
 import jax.numpy as jnp
 import jax.random as random
-from numpyro.diagnostics import hpdi
 import torch
-import torch.optim as optim
-from utils import item_response_fn_1PL_cheat, set_seed
+from utils import item_response_fn_1PL_cheat, set_seed, perform_t_test
 from synthetic_testtaker import CheatingTestTaker
 import matplotlib.pyplot as plt
 
@@ -48,49 +48,37 @@ def fit_cheat_theta_mcmc(
     
     return mean_theta_true, std_theta_true, theta_true_samples, \
         mean_theta_cheat, std_theta_cheat, theta_cheat_samples
-
-if __name__ == "__main__":
-    parser = ArgumentParser()
-    parser.add_argument("--seed", type=int, default=10)
-    parser.add_argument("--question_num", type=int, default=1000)
-    parser.add_argument("--contamination_percent", type=float, default=0.8)
-    parser.add_argument("--testtaker_true_theta", type=float, default=0)
-    parser.add_argument("--testtaker_cheat_gain", type=float, default=1.5)
-    args = parser.parse_args()
-
-    set_seed(args.seed)
-
-    z3 = torch.normal(mean=0.0, std=1.0, size=(args.question_num,))
-    num_ones = int(args.question_num * args.contamination_percent)
-    contamination = torch.cat([
-        torch.ones(num_ones), 
-        torch.zeros(args.question_num - num_ones)
-        ])
-    contamination = contamination[torch.randperm(args.question_num)]
-    
-    testtaker1 = CheatingTestTaker(
-        true_theta=args.testtaker_true_theta, cheat_gain=args.testtaker_cheat_gain, model="1PL"
+        
+def main(testtaker_true_theta, testtaker_cheat_gain, z3, contamination, asked_question_list):
+    testtaker = CheatingTestTaker(
+        true_theta=testtaker_true_theta, cheat_gain=testtaker_cheat_gain, model="1PL"
         )
-    true_theta, cheat_theta = testtaker1.get_ability()
-    print(f"True theta: {true_theta}")
-    print(f"Cheat theta: {cheat_theta}")
+    true_theta, cheat_theta = testtaker.get_ability()
+    print(f"true theta: {true_theta}")
+    print(f"cheat theta: {cheat_theta}")
 
-    asked_question_list = list(range(args.question_num))
     asked_answer_list = []
     for i in range(args.question_num):
-        asked_answer_list.append(testtaker1.ask(z3, contamination, i))
-        
-    # MCMC
-    contamination = jnp.array(contamination)
-    z3 = jnp.array(z3)
+        asked_answer_list.append(testtaker.ask(z3, contamination, i))
     
+    # CTT
+    print("CTT")
+    CTT_mean = np.mean(asked_answer_list)
+    CTT_std = np.std(asked_answer_list)
+    print(f"CTT score mean: {CTT_mean}")
+    print(f"CTT score std: {CTT_std}")
+        
+    # IRT via MCMC
+    print("\nIRT via MCMC")
+    z3 = jnp.array(z3)
+    contamination = jnp.array(contamination)
     asked_question_list = jnp.array(asked_question_list)
-    asked_answer_list = jnp.array(asked_answer_list)
+    asked_answer_list_jnp = jnp.array(asked_answer_list)
     
     mean_theta_true, std_theta_true, theta_true_samples, \
         mean_theta_cheat, std_theta_cheat, theta_cheat_samples \
             = fit_cheat_theta_mcmc(
-                z3, asked_question_list, asked_answer_list, contamination
+                z3, asked_question_list, asked_answer_list_jnp, contamination
                 )
 
     print(f"mean_theta_true: {mean_theta_true}")
@@ -98,30 +86,74 @@ if __name__ == "__main__":
     print(f"mean_theta_cheat: {mean_theta_cheat}")
     print(f"std_theta_cheat: {std_theta_cheat}")
     
-    # CTT
-    probs = item_response_fn_1PL_cheat(
-        z3, contamination, true_theta, cheat_theta, datatype="jnp"
-        )
-    response_list = []
-    for prob in probs:
-        prob_tensor = torch.tensor(prob.tolist())
-        bernoulli = torch.distributions.Bernoulli(prob_tensor)
-        response = bernoulli.sample()
-        response_list.append(response)
-    response_1_std = torch.std(torch.stack(response_list))
-    response_1_mean = sum(response_list) / len(response_list)
-    print(f"CTT theta_1 mean: {response_1_mean}")
-    print(f"CTT theta_1 std: {response_1_std}")
+    return asked_answer_list, theta_true_samples, theta_cheat_samples
+
+if __name__ == "__main__":
+    parser = ArgumentParser()
+    parser.add_argument("--seed", type=int, default=10)
+    parser.add_argument("--question_num", type=int, default=1000)
+    parser.add_argument("--contamination_percent", type=float, default=0.8)
+    parser.add_argument("--testtaker1_true_theta", type=float, default=0)
+    parser.add_argument("--testtaker1_cheat_gain", type=float, default=1.5)
+    parser.add_argument("--testtaker2_true_theta", type=float, default=-0.5)
+    parser.add_argument("--testtaker2_cheat_gain", type=float, default=2)
+    args = parser.parse_args()
+
+    set_seed(args.seed)
+
+    z3 = torch.normal(mean=0.0, std=1.0, size=(args.question_num,))
+    
+    asked_question_list = list(range(args.question_num))
+    
+    num_ones = int(args.question_num * args.contamination_percent)
+    contamination = torch.cat([
+        torch.ones(num_ones),
+        torch.zeros(args.question_num - num_ones)
+        ])
+    contamination = contamination[torch.randperm(args.question_num)]
+    
+    print("Test Taker 1")
+    asked_answer_list_1, theta_true_samples_1, theta_cheat_samples_1 = main(
+        args.testtaker1_true_theta, 
+        args.testtaker1_cheat_gain, 
+        z3, 
+        contamination, 
+        asked_question_list
+    )
+    
+    print("\n\n\nTest Taker 2")
+    asked_answer_list_2, theta_true_samples_2, theta_cheat_samples_2 = main(
+        args.testtaker2_true_theta, 
+        args.testtaker2_cheat_gain,
+        z3,
+        contamination,
+        asked_question_list
+    )
+    
+    print("\n\n\n")
+    perform_t_test(asked_answer_list_1, asked_answer_list_2, label="CTT")
+    perform_t_test(theta_true_samples_1, theta_true_samples_2, label="IRT")
     
     plt.figure(figsize=(12, 6))
 
-    # Plotting samples for Test Taker 1
+    # Test Taker 1
     plt.subplot(1, 2, 1)
-    plt.hist(theta_true_samples, bins=30, density=True, alpha=0.6, color='blue', label='Theta True')
-    plt.hist(theta_cheat_samples, bins=30, density=True, alpha=0.6, color='green', label='Theta Cheat')
+    plt.hist(theta_true_samples_1, bins=30, density=True, alpha=0.6, color='blue', label='Theta True')
+    plt.hist(theta_cheat_samples_1, bins=30, density=True, alpha=0.6, color='green', label='Theta Cheat')
+    plt.title('Histogram of Theta Samples')
+    plt.xlabel('Theta')
+    plt.ylabel('Density')
+    plt.legend()
+    
+    # Test Taker 2
+    plt.subplot(1, 2, 2)
+    plt.hist(theta_true_samples_2, bins=30, density=True, alpha=0.6, color='blue', label='Theta True')
+    plt.hist(theta_cheat_samples_2, bins=30, density=True, alpha=0.6, color='green', label='Theta Cheat')
     plt.title('Histogram of Theta Samples')
     plt.xlabel('Theta')
     plt.ylabel('Density')
     plt.legend()
 
-    plt.savefig('../plot/synthetic/cheat.png')
+    fig_dir = "../plot/synthetic"
+    os.makedirs(fig_dir, exist_ok=True)
+    plt.savefig(f'{fig_dir}/cheat.png')
