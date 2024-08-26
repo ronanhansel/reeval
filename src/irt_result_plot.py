@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import subprocess
 import torch
 import numpy as np
-import os
 from utils import item_response_fn_1PL, calculate_3d_wasserstein_distance, calculate_1d_wasserstein_distance
 import argparse
 from sklearn.metrics import mean_squared_error
@@ -33,7 +32,7 @@ if __name__ == "__main__":
     true_Z_path = f'../data/synthetic/response_matrix/true_Z.csv'
     true_theta_path = f'../data/synthetic/response_matrix/true_theta.csv'
 
-    experiment_type = 'synthetic'
+    experiment_type = 'real'
     Z_dir = f'../data/{experiment_type}/irt_result/Z/'
     theta_dir = f'../data/{experiment_type}/irt_result/theta/'
     
@@ -49,7 +48,7 @@ if __name__ == "__main__":
     
     # clean up item parameters inferred from IRT
     for filename in os.listdir(Z_dir):
-        if filename.endswith('.csv'):
+        if filename.endswith('_Z.csv'):
             file_path = os.path.join(Z_dir, filename)
             df = pd.read_csv(file_path)
 
@@ -72,29 +71,29 @@ if __name__ == "__main__":
             new_df.to_csv(clean_file_path, index=False)
 
 
-
-    # synthetic mse of Z and theta
-    mse_output_path = '../plot/synthetic/mse.txt'
-    with open(mse_output_path, 'w') as f:
-        f.write('MSE of Z\n')
-        for filename in os.listdir(Z_dir):
-            if filename.endswith('_clean.csv'):
-                synthetic_Z_path = os.path.join(Z_dir, filename)
-                synthetic_Z = pd.read_csv(synthetic_Z_path).values
-                true_Z = pd.read_csv(true_Z_path).values
-                mse_Z = mean_squared_error(true_Z, synthetic_Z)
-                model = filename.split('_Z_clean.csv')[0].split('synthetic_')[1]
-                f.write(f'{model}: {mse_Z}\n')
-                    
-        f.write('\n\n\nMSE of theta\n')
-        for filename in os.listdir(theta_dir):
-            if filename.endswith('.csv'):
-                synthetic_theta_path = os.path.join(theta_dir, filename)
-                synthetic_theta = pd.read_csv(synthetic_theta_path).values[:, -1]
-                true_theta = pd.read_csv(true_theta_path).values[:, -1]
-                mse_theta = mean_squared_error(true_theta, synthetic_theta)
-                model = filename.split('_theta.csv')[0].split('synthetic_')[1]
-                f.write(f'{model}: {mse_theta}\n')
+    if experiment_type == 'synthetic':
+        # synthetic mse of Z and theta
+        mse_output_path = '../plot/synthetic/mse.txt'
+        with open(mse_output_path, 'w') as f:
+            f.write('MSE of Z\n')
+            for filename in os.listdir(Z_dir):
+                if filename.endswith('_clean.csv'):
+                    synthetic_Z_path = os.path.join(Z_dir, filename)
+                    synthetic_Z = pd.read_csv(synthetic_Z_path).values
+                    true_Z = pd.read_csv(true_Z_path).values
+                    mse_Z = mean_squared_error(true_Z, synthetic_Z)
+                    model = filename.split('_Z_clean.csv')[0].split('synthetic_')[1]
+                    f.write(f'{model}: {mse_Z}\n')
+                        
+            f.write('\n\n\nMSE of theta\n')
+            for filename in os.listdir(theta_dir):
+                if filename.endswith('.csv'):
+                    synthetic_theta_path = os.path.join(theta_dir, filename)
+                    synthetic_theta = pd.read_csv(synthetic_theta_path).values[:, -1]
+                    true_theta = pd.read_csv(true_theta_path).values[:, -1]
+                    mse_theta = mean_squared_error(true_theta, synthetic_theta)
+                    model = filename.split('_theta.csv')[0].split('synthetic_')[1]
+                    f.write(f'{model}: {mse_theta}\n')
 
     
     

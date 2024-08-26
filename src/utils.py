@@ -5,6 +5,7 @@ import jax.numpy as jnp
 import random
 import gc
 import sys
+from scipy.stats import ttest_ind
 import os
 
 # overleaf/R_library: z1/g, z2/a1, z3/d
@@ -79,7 +80,18 @@ def load_state(filepath):
     else:
         print(f"No previous state found at {filepath}")
         return None
-    
+
+def perform_t_test(sample_1, sample_2, label=""):
+    print(f"{label} T-test:")
+    print(f"Null Hypothesis (H0): The means of the two samples are equal.")
+    print(f"Alternative Hypothesis (H1): The means of the two samples are not equal.")
+    t_stat, p_value = ttest_ind(sample_1, sample_2)
+    print(f"t_stat = {t_stat}, p_value = {p_value}")
+    if p_value < 0.05:
+        print(f"Reject the null hypothesis for {label}.")
+    else:
+        print(f"Fail to reject the null hypothesis for {label}.")
+        
 if __name__ == "__main__":
     print(calculate_1d_wasserstein_distance([0, 1, 3], [5, 6, 8]))
     print(calculate_1d_wasserstein_distance([1, 1, 3], [5, 6, 8]))

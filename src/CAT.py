@@ -1,14 +1,8 @@
-import gc
-import sys
-import pandas as pd
-import matplotlib.pyplot as plt
-import psutil
 import torch
 import random
 from synthetic_testtaker import SimulatedTestTaker
 from fit_theta import fit_theta_mcmc
 import jax.numpy as jnp
-
 from utils import item_response_fn_1PL, clear_caches, set_seed, save_state, load_state
 import numpy as np
 from argparse import ArgumentParser
@@ -34,7 +28,7 @@ def CAT_fisher(z3, unasked_question_list, theta_mean):
     index_with_max_fisher_info = torch.argmax(torch.tensor(fisher_info_list)).item()
     return unasked_question_list[index_with_max_fisher_info]
 
-def CAT_modern(z3, unasked_question_list, theta_samples):
+def CAT_efisher(z3, unasked_question_list, theta_samples):
     theta_samples_tensor = torch.tensor(np.array(theta_samples))
     fisher_info_list = []
     for unasked_question_index in unasked_question_list:
@@ -43,15 +37,16 @@ def CAT_modern(z3, unasked_question_list, theta_samples):
         prob = item_response_fn_1PL(z_single_expanded, theta_samples_tensor)
         hessian = prob * (1 - prob)
         fisher_info_list.append(hessian.mean())
-    unasked_question_index_with_max_fisher_info = torch.argmax(torch.tensor(fisher_info_list)).item()
-    return unasked_question_list[unasked_question_index_with_max_fisher_info]
+    index_with_max_fisher_info = torch.argmax(torch.tensor(fisher_info_list)).item()
+    return unasked_question_list[index_with_max_fisher_info]
     
 def main(question_num, new_testtaker, strategy, subset_question_num, warmup, state_dir):
     print(f'strategy: {strategy}')
     print(f'question_num: {question_num}')
     print(f'subset_question_num: {subset_question_num}')
+    true_theta = new_testtaker.get_ability()
     
-    state_path = os.path.join(state_dir, f"{strategy}_{question_num}.pt")
+    state_path = os.path.join(state_dir, f"{strategy}_{question_num}_{true_theta}.pt")
     state = load_state(state_path)
     if state:
         z3 = state['z3']
@@ -107,8 +102,8 @@ def main(question_num, new_testtaker, strategy, subset_question_num, warmup, sta
             new_question_index = CAT_owen(z3, unasked_question_list, mean_theta)
         elif strategy=="fisher":
             new_question_index = CAT_fisher(z3, unasked_question_list, mean_theta)
-        elif strategy=="modern":
-            new_question_index = CAT_modern(z3, unasked_question_list, theta_samples)
+        elif strategy=="efisher":
+            new_question_index = CAT_efisher(z3, unasked_question_list, theta_samples)
         else:
             raise ValueError("strategy not supported")
         
@@ -130,8 +125,6 @@ def main(question_num, new_testtaker, strategy, subset_question_num, warmup, sta
         
         clear_caches()
         
-        
-
 if __name__ == "__main__":
     # debug python CAT.py --subset_question_num 5
     
@@ -139,13 +132,14 @@ if __name__ == "__main__":
     parser.add_argument("--seed", type=int, default=10)
     parser.add_argument("--algo", type=str, default="fisher")
     parser.add_argument("--question_num", type=int, default=10000)
-    parser.add_argument("--subset_question_num", type=int, default=1000)
-    parser.add_argument("--warmup", type=int, default=100)
+    parser.add_argument("--subset_question_num", type=int, default=50)
+    parser.add_argument("--warmup", type=int, default=0)
+    parser.add_argument("--true_theta", type=int, default=0)
     args = parser.parse_args()
 
     set_seed(args.seed)
 
-    new_testtaker = SimulatedTestTaker(theta=1.25, model="1PL")
+    new_testtaker = SimulatedTestTaker(theta=args.true_theta, model="1PL")
     state_dir = "../data/synthetic/CAT"
 
     main(

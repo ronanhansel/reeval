@@ -42,7 +42,7 @@ def liguistic_mutation(client, template_request, text):
     return extract_content("#mutated_text: ",response.choices[0].message.content)
 
 def persuasion_mutation(client, template_request, text):
-    with open('persuasion_template.json', 'r') as file:
+    with open('persuasion_mutation.json', 'r') as file:
         persuasion_template = json.load(file)
     texmplate_idx = persuasion_template.keys()
     if template_request not in texmplate_idx:
