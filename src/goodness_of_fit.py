@@ -2,6 +2,7 @@ import pandas as pd
 import torch
 import numpy as np
 from utils import item_response_fn_1PL
+import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
     base_coef_1PL = pd.read_csv('../data/real/irt_result/Z/base_1PL_Z_clean.csv')
@@ -13,6 +14,7 @@ if __name__ == "__main__":
     y_df = pd.read_csv('../data/real/response_matrix/base_matrix.csv')
 
     bins = np.linspace(-3, 3, 7)
+    print(bins)
     # [-3. -2. -1.  0.  1.  2.  3.]
 
     diff_list = []
@@ -23,7 +25,6 @@ if __name__ == "__main__":
 
         for j in range(len(bins) - 1):
             bin_mask = (theta >= bins[j]) & (theta < bins[j + 1])
-            print(bin_mask)
             if bin_mask.sum() > 0: # bin not empty
                 y_empirical = y_col[bin_mask].mean()
 
@@ -31,7 +32,7 @@ if __name__ == "__main__":
                 theta_mid_tensor = torch.tensor([theta_mid], dtype=torch.float32)
                 y_theoretical = item_response_fn_1PL(theta_mid_tensor, single_z3).item()
 
-                diff = y_empirical - y_theoretical
+                diff = abs(y_empirical - y_theoretical)
                 diff_list.append(diff)
 
     diff_array = np.array(diff_list)
@@ -40,3 +41,11 @@ if __name__ == "__main__":
 
     print(f'Mean of differences: {mean_diff}')
     print(f'Standard deviation of differences: {std_diff}')
+
+    plt.figure(figsize=(10, 6))
+    plt.hist(diff_list, bins=40, density=True, alpha=0.7, color='blue')
+    plt.xlabel('Difference')
+    plt.ylabel('Density')
+    plt.title('Histogram of Differences (Empirical vs Theoretical)')
+    plt.grid(True)
+    plt.show()
