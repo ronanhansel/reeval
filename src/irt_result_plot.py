@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import subprocess
 import torch
 import numpy as np
-import os
 from utils import item_response_fn_1PL, calculate_3d_wasserstein_distance, calculate_1d_wasserstein_distance
 import argparse
 from sklearn.metrics import mean_squared_error
@@ -49,7 +48,7 @@ if __name__ == "__main__":
     
     # clean up item parameters inferred from IRT
     for filename in os.listdir(Z_dir):
-        if filename.endswith('.csv'):
+        if filename.endswith('_Z.csv'):
             file_path = os.path.join(Z_dir, filename)
             df = pd.read_csv(file_path)
 
