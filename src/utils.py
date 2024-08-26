@@ -85,7 +85,7 @@ def perform_t_test(sample_1, sample_2, label=""):
     print(f"{label} T-test:")
     print(f"Null Hypothesis (H0): The means of the two samples are equal.")
     print(f"Alternative Hypothesis (H1): The means of the two samples are not equal.")
-    t_stat, p_value = ttest_ind(sample_1, sample_2, equal_var=False)
+    t_stat, p_value = ttest_ind(sample_1, sample_2)
     print(f"t_stat = {t_stat}, p_value = {p_value}")
     if p_value < 0.05:
         print(f"Reject the null hypothesis for {label}.")
