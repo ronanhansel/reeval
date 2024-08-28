@@ -27,6 +27,7 @@ def get_delete_index(input_dir):
 if __name__ == "__main__":
     load_dotenv()
     hf_token = os.getenv('HF_TOKEN')
+    print(f"hf_token: {hf_token}")
     login(token=hf_token)
 
     question_text_path = "/Users/tyhhh/Desktop/certified-eval/data/real/pre_irt_data/eval/eval_01-ai_yi-34b-chat_result.csv"
@@ -48,6 +49,6 @@ if __name__ == "__main__":
     combined_df = pd.concat([question_df, Z_df], axis=1)
     combined_df.columns = ['question_text', 'z3']
     hf_dataset = Dataset.from_pandas(combined_df)
-    dataset_dict = DatasetDict({"train": hf_dataset})
-    dataset_dict.push_to_hub("stair-lab/airbench-difficulty", private=True)
+    dataset_dict = DatasetDict({"text_z3_pair": hf_dataset})
+    dataset_dict.push_to_hub("yuhengtu/airbench_difficulty", private=True)
 
