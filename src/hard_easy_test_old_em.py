@@ -8,7 +8,7 @@ import wandb
 from utils import item_response_fn_1PL, set_seed, inverse_sigmoid, plot_hard_easy
 
 if __name__ == "__main__":
-    wandb.init(project="hard_easy_test_old")
+    wandb.init(project="hard_easy_test_old_em")
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset', type=str, required=True)
     args = parser.parse_args()
@@ -19,11 +19,11 @@ if __name__ == "__main__":
     selection_prob = 0.8
     subset_size = 100
     step_size = 4000
-    iterations = 100
+    iterations = 1000
     
     y = pd.read_csv(f'../data/pre_calibration/{args.dataset}/matrix.csv', index_col=0).values
-    theta = pd.read_csv(f'../data/nonamor_calibration/{args.dataset}/nonamor_theta.csv')["theta"].values
-    z = pd.read_csv(f'../data/nonamor_calibration/{args.dataset}/nonamor_z.csv')["z"].values
+    theta = pd.read_csv(f'../data/em_1pl_calibration/{args.dataset}/theta.csv')["theta"].values
+    z = pd.read_csv(f'../data/em_1pl_calibration/{args.dataset}/z.csv')["z"].values
     assert y.shape[1] == z.shape[0], f"y.shape[1]: {y.shape[1]}, z.shape[0]: {z.shape[0]}"
     assert y.shape[0] == theta.shape[0], f"y.shape[0]: {y.shape[0]}, theta.shape[0]: {theta.shape[0]}"
     
@@ -74,15 +74,15 @@ if __name__ == "__main__":
         theta_hats.append(theta_hat.item())
         y_means.append(inverse_sigmoid(y_sub.mean()).item())
     
-    save_dir = f'../data/hard_easy_test_old/{args.dataset}'
+    save_dir = f'../data/hard_easy_test_old_em/{args.dataset}'
     os.makedirs(save_dir, exist_ok=True)
     df = pd.DataFrame({
         "theta_hat": theta_hats,
         "y_mean": y_means,
     })
-    df.to_csv(f'{save_dir}/hard_easy_test_old.csv', index=False)
+    df.to_csv(f'{save_dir}/hard_easy_test_old_em.csv', index=False)
     
-    plot_dir = f'../plot/hard_easy_test_old'
+    plot_dir = f'../plot/hard_easy_test_old_em'
     os.makedirs(plot_dir, exist_ok=True)
     plot_hard_easy(
         theta_hats,

@@ -1,11 +1,14 @@
 import pandas as pd
 import torch
 import numpy as np
+import jax.numpy as jnp
 import random
 import warnings
 from embed_text_package.embed_text import Embedder
 import torch.nn as nn
 from torch.utils.data import DataLoader
+from scipy.stats import spearmanr
+from tqdm import tqdm
 import matplotlib.pyplot as plt
 from tueplots import bundles
 plt.rcParams.update(bundles.icml2022())
@@ -30,56 +33,53 @@ class MLP(nn.Module):
         return self.model(x)
     
 DESCRIPTION_MAP = {
-    # 'synthetic_efficiency': '### DATASET: Synthetic efficiency, ### PUBLISH TIME: unknown, ### CONTENT: to better understand inference runtime performance of various models',
     'airbench': '### DATASET: AirBench, ### PUBLISH TIME: 2024, ### CONTENT: AI safety benchmark that aligns with emerging government regulations and company policies',
-    'math': '### DATASET: MATH, ### PUBLISH TIME: 2021, ### CONTENT: for measuring mathematical problem solving on competition math problems with or without with chain-of-thought style reasoning',
-    'mmlu': '### DATASET: MMLU (Massive Multitask Language Understanding), ### PUBLISH TIME: 2021, ### CONTENT: for knowledge-intensive question answering across 57 domains',
-    'wikifact': '### DATASET: WikiFact, ### PUBLISH TIME: 2019, ### CONTENT: knowledge base completion, entity-relation-entity triples in natural language form, to more extensively test factual knowledge',
-    'entity_data_imputation': '### DATASET: Data imputation, ### PUBLISH TIME: 2021, ### CONTENT: tests the ability to impute missing entities in a data table',
-    'commonsense': '### DATASET: HellaSwag, ### PUBLISH TIME: 2019, ### CONTENT: commonsense reasoning in question answering',
-    'quac': '### DATASET: QuAC (Question Answering in Context), ### PUBLISH TIME: 2018, ### CONTENT: question answering in the context of dialogues',
-    'imdb': '### DATASET: IMDB, ### PUBLISH TIME: 2011, ### CONTENT: sentiment analysis in movie review',
-    'bbq': '### DATASET: BBQ (Bias Benchmark for Question Answering), ### PUBLISH TIME: 2022, ### CONTENT: for measuring social bias in question answering in ambiguous and unambigous context',
     'twitter_aae': '### DATASET: TwitterAAE, ### PUBLISH TIME: 2016, ### CONTENT: for measuring language model performance in tweets as a function of speaker dialect, on African-American-aligned Tweets, on White-aligned Tweets',
-    'truthful_qa': '### DATASET: TruthfulQA, ### PUBLISH TIME: 2022, ### CONTENT: for measuring model truthfulness and commonsense knowledge in question answering',
-    # 'msmarco': '### DATASET: MSMARCO, ### PUBLISH TIME: 2016, ### CONTENT: for passage retrieval in information retrieval',
-    'legal_support': '### DATASET: LegalSupport, ### PUBLISH TIME: unknown, ### CONTENT: measure fine-grained legal reasoning through reverse entailment.',
-    'boolq': '### DATASET: boolq, ### PUBLISH TIME: 2019, ### CONTENT: binary (yes/no) question answering, passages from Wikipedia, questions from search queries',
-    'narrative_qa': '### DATASET: NarrativeQA, ### PUBLISH TIME: 2017, ### CONTENT: for reading comprehension over narratives, passages are books and movie scripts',
+    'math': '### DATASET: MATH, ### PUBLISH TIME: 2021, ### CONTENT: for measuring mathematical problem solving on competition math problems with or without with chain-of-thought style reasoning',
+    'entity_data_imputation': '### DATASET: Data imputation, ### PUBLISH TIME: 2021, ### CONTENT: tests the ability to impute missing entities in a data table',
     'real_toxicity_prompts': '### DATASET: RealToxicityPrompts, ### PUBLISH TIME: 2020, ### CONTENT: for measuring toxicity in prompted model generations',
-    'bold': '### DATASET: BOLD (Bias in Open-Ended Language Generation Dataset), ### PUBLISH TIME: 2021, ### CONTENT: for measuring biases and toxicity in open-ended language generation',
-    # 'gsm': '### DATASET: GSM8K (Grade school math word problems), ### PUBLISH TIME: 2021, ### CONTENT: for testing mathematical reasoning on grade-school math problems',
-    'babi_qa': '### DATASET: bAbI, ### PUBLISH TIME: 2015, ### CONTENT: for measuring understanding and reasoning',
-    # 'summarization_xsum': '### DATASET: XSUM, ### PUBLISH TIME: 2018, ### CONTENT: for text summarization of BBC news articles',
-    'synthetic_reasoning_natural': '### DATASET: Synthetic reasoning (natural language), ### PUBLISH TIME: 2021, ### CONTENT: Synthetic reasoning tasks defined using simple natural language based on LIME',
-    'dyck_language_np3': '### DATASET: Dyck, ### PUBLISH TIME: 2019, ### CONTENT: Scenario testing hierarchical reasoning through the Dyck formal languages',
     'civil_comments': '### DATASET: CivilComments, ### PUBLISH TIME: 2019, ### CONTENT: for toxicity detection',
-    'lsat_qa': '### DATASET: LSAT, ### PUBLISH TIME: 2021, ### CONTENT: for measuring analytical reasoning on the Law School Admission Test',
-    'raft': '### DATASET: RAFT (Real-world Annotated Few-Shot), ### PUBLISH TIME: 2021, ### CONTENT: meta-benchmark of 11 real-world text classification tasks',
-    # 'code': '### DATASET: Code, ### PUBLISH TIME: 2021, ### CONTENT: for measuring competence on code challenges, for measuring functional correctness for synthesizing programs from docstrings',
-    'entity_matching': '### DATASET: Entity matching, ### PUBLISH TIME: 2016, ### CONTENT: tests the ability to determine if two entities match',
+    'imdb': '### DATASET: IMDB, ### PUBLISH TIME: 2011, ### CONTENT: sentiment analysis in movie review',
+    'boolq': '### DATASET: boolq, ### PUBLISH TIME: 2019, ### CONTENT: binary (yes/no) question answering, passages from Wikipedia, questions from search queries',
+    'wikifact': '### DATASET: WikiFact, ### PUBLISH TIME: 2019, ### CONTENT: knowledge base completion, entity-relation-entity triples in natural language form, to more extensively test factual knowledge',
+    'babi_qa': '### DATASET: bAbI, ### PUBLISH TIME: 2015, ### CONTENT: for measuring understanding and reasoning',
+    'mmlu': '### DATASET: MMLU (Massive Multitask Language Understanding), ### PUBLISH TIME: 2021, ### CONTENT: for knowledge-intensive question answering across 57 domains',
+    'truthful_qa': '### DATASET: TruthfulQA, ### PUBLISH TIME: 2022, ### CONTENT: for measuring model truthfulness and commonsense knowledge in question answering',
+    'legal_support': '### DATASET: LegalSupport, ### PUBLISH TIME: unknown, ### CONTENT: measure fine-grained legal reasoning through reverse entailment.',
     'synthetic_reasoning': '### DATASET: Synthetic reasoning, ### PUBLISH TIME: 2021, ### CONTENT: defined using abstract symbols based on LIME and simple natural language based on LIME',
+    'quac': '### DATASET: QuAC (Question Answering in Context), ### PUBLISH TIME: 2018, ### CONTENT: question answering in the context of dialogues',
+    'entity_matching': '### DATASET: Entity matching, ### PUBLISH TIME: 2016, ### CONTENT: tests the ability to determine if two entities match',
+    'synthetic_reasoning_natural': '### DATASET: Synthetic reasoning (natural language), ### PUBLISH TIME: 2021, ### CONTENT: Synthetic reasoning tasks defined using simple natural language based on LIME',
+    'bbq': '### DATASET: BBQ (Bias Benchmark for Question Answering), ### PUBLISH TIME: 2022, ### CONTENT: for measuring social bias in question answering in ambiguous and unambigous context',
+    'raft': '### DATASET: RAFT (Real-world Annotated Few-Shot), ### PUBLISH TIME: 2021, ### CONTENT: meta-benchmark of 11 real-world text classification tasks',
+    'narrative_qa': '### DATASET: NarrativeQA, ### PUBLISH TIME: 2017, ### CONTENT: for reading comprehension over narratives, passages are books and movie scripts',
+    'commonsense': '### DATASET: HellaSwag, ### PUBLISH TIME: 2019, ### CONTENT: commonsense reasoning in question answering',
+    'lsat_qa': '### DATASET: LSAT, ### PUBLISH TIME: 2021, ### CONTENT: for measuring analytical reasoning on the Law School Admission Test',
+    'bold': '### DATASET: BOLD (Bias in Open-Ended Language Generation Dataset), ### PUBLISH TIME: 2021, ### CONTENT: for measuring biases and toxicity in open-ended language generation',
+    'dyck_language_np3': '### DATASET: Dyck, ### PUBLISH TIME: 2019, ### CONTENT: Scenario testing hierarchical reasoning through the Dyck formal languages',
+    # 'synthetic_efficiency': '### DATASET: Synthetic efficiency, ### PUBLISH TIME: unknown, ### CONTENT: to better understand inference runtime performance of various models',
+    # 'gsm': '### DATASET: GSM8K (Grade school math word problems), ### PUBLISH TIME: 2021, ### CONTENT: for testing mathematical reasoning on grade-school math problems',
+    # 'summarization_xsum': '### DATASET: XSUM, ### PUBLISH TIME: 2018, ### CONTENT: for text summarization of BBC news articles',
+    # 'code': '### DATASET: Code, ### PUBLISH TIME: 2021, ### CONTENT: for measuring competence on code challenges, for measuring functional correctness for synthesizing programs from docstrings',
+    # 'msmarco': '### DATASET: MSMARCO, ### PUBLISH TIME: 2016, ### CONTENT: for passage retrieval in information retrieval',
 }
 DATASETS = list(DESCRIPTION_MAP.keys())
 
+# overleaf/R_library: z1/g, z2/a1, z3/d
 def item_response_fn_1PL(z3, theta):
     return 1 / (1 + torch.exp(-(theta + z3)))
 
-def item_response_fn_1PL_np(z3, theta):
-    return 1 / (1 + np.exp(-(theta + z3)))
+def item_response_fn_1PL_jnp(z3, theta):
+    return 1 / (1 + jnp.exp(-(theta + z3)))
 
-def sample_mean_std(data: np.array):
-    masked_data = data[data != -1]
-    mean = np.mean(masked_data)
-    sample_means = []
-    for _ in range(100):
-        indices = np.random.choice(
-            len(masked_data), int(0.8 * masked_data.shape[0]), replace=False
-        )
-        sample_mean = np.mean(masked_data[indices])
-        sample_means.append(sample_mean)
-    sample_std = np.std(sample_means)
-    return mean, sample_std
+def item_response_fn_1PL_multi_dim(z3, theta, a):
+    return 1 / (1 + torch.exp(-(torch.matmul(theta, torch.transpose(a, 0, 1)) + z3)))
+
+def item_response_fn_2PL(z2, z3, theta):
+    return 1 / (1 + torch.exp(-(z2 * theta + z3)))
+
+def item_response_fn_2PL_jnp(z2, z3, theta):
+    return 1 / (1 + jnp.exp(-(z2 * theta + z3)))
 
 def set_seed(seed):
     random.seed(seed)
@@ -96,6 +96,11 @@ def split_indices(length):
     train_indices = indices[:train_size]
     test_indices = indices[train_size:]
     return train_indices.tolist(), test_indices.tolist()
+
+def inverse_sigmoid(x):
+    epsilon = 1e-7
+    x = torch.clamp(x, min=epsilon, max=1 - epsilon)  # Clip the input to (0, 1)
+    return torch.log(x / (1 - x))
 
 def get_embed(
     dataset,
@@ -182,6 +187,243 @@ def goodness_of_fit_1PL_plot(
     
     return mean_diff, std_diff
 
+def goodness_of_fit_1PL_multi_dim(
+    z: torch.Tensor,
+    theta: torch.Tensor,
+    a: torch.Tensor,
+    y: torch.Tensor,
+    bin_size: int=6,
+):
+    assert y.shape[1] == z.shape[0], f'{y.shape[1]} != {z.shape[0]}'
+    assert y.shape[0] == theta.shape[0], f'{y.shape[0]} != {theta.shape[0]}'
+
+    bin_start_dim1, bin_end_dim1 = torch.min(theta[:, 0]), torch.max(theta[:, 0])
+    bins_dim1 = torch.linspace(bin_start_dim1, bin_end_dim1, bin_size+1)
+    print(bins_dim1)
+    bin_start_dim2, bin_end_dim2 = torch.min(theta[:, 1]), torch.max(theta[:, 1])
+    bins_dim2 = torch.linspace(bin_start_dim2, bin_end_dim2, bin_size+1)
+    print(bins_dim2)
+    
+    diff_list = []
+    for i in range(z.shape[0]):
+        single_z = z[i]
+        single_a = a[i]
+        y_col = y[:, i]
+
+        for j in range(bins_dim1.shape[0] - 1):
+            for k in range(bins_dim2.shape[0] - 1):
+                bin_mask = (theta[:, 0] >= bins_dim1[j]) & (theta[:, 0] < bins_dim1[j + 1]) & (y_col != -1) \
+                    & (theta[:, 1] >= bins_dim2[k]) & (theta[:, 1] < bins_dim2[k + 1])
+                
+                if bin_mask.sum() > 0: # bin not empty
+                    y_empirical = y_col[bin_mask].mean()
+
+                    theta_mid = torch.tensor(
+                        [(bins_dim1[j] + bins_dim1[j + 1]) / 2, (bins_dim2[k] + bins_dim2[k + 1]) / 2], 
+                        dtype=torch.float32
+                    )
+                    y_theoretical = 1 / (1 + torch.exp(-(torch.matmul(theta_mid, single_a) + single_z))).item()
+
+                    diff = 1 - abs(y_empirical - y_theoretical)
+                    diff_list.append(diff)
+
+    diff_array = np.array(diff_list)
+    mean_diff = np.mean(diff_array)
+    return mean_diff, diff_array
+
+def goodness_of_fit_1PL_multi_dim_plot(
+    z: torch.Tensor,
+    theta: torch.Tensor,
+    a: torch.Tensor,
+    y: torch.Tensor,
+    plot_path: str,
+    bin_size: int=6,
+):
+    mean_diff, diff_array = goodness_of_fit_1PL_multi_dim(z, theta, a, y, bin_size)
+    
+    sample_means = []
+    for _ in range(100):
+        indices = np.random.choice(
+            len(diff_array), int(0.8 * len(diff_array)), replace=False
+        )
+        sample_mean = np.mean(diff_array[indices])
+        sample_means.append(sample_mean)
+    std_diff = np.std(sample_means)
+    
+    plt.figure(figsize=(10, 6))
+    plt.hist(diff_array, bins=40, density=True, alpha=0.4)
+    plt.xlabel(r'Difference between empirical and theoretical $P(y=1)$', fontsize=30)
+    plt.ylabel(r'Goodness of fit', fontsize=30)
+    plt.tick_params(axis='both', labelsize=25)
+    plt.xlim(0, 1)
+    plt.axvline(mean_diff, linestyle='--')
+    plt.text(
+        mean_diff, 
+        plt.gca().get_ylim()[1], 
+        f'{mean_diff:.2f} $\\pm$ {3 * std_diff:.2f}', 
+        ha='center', 
+        va='bottom', 
+        fontsize=25
+    )
+    plt.savefig(plot_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    
+    return mean_diff, std_diff
+
+def goodness_of_fit_2PL(
+    theta: torch.Tensor,
+    z2: torch.Tensor,
+    z3: torch.Tensor,
+    y: torch.Tensor,
+    bin_size: int=6,
+):
+    bin_start, bin_end = torch.min(theta), torch.max(theta)
+    bins = torch.linspace(bin_start, bin_end, bin_size+1)
+    print(bins)
+
+    diff_list = []
+    for i in tqdm(range(y.shape[1])):
+        single_z2 = z2[i]
+        single_z3 = z3[i]
+        y_col = y[:, i]
+
+        for j in range(len(bins) - 1):
+            bin_mask = (theta >= bins[j]) & (theta < bins[j + 1]) & (y_col != -1)
+            if bin_mask.sum() > 0:  # Bin not empty
+                y_empirical = y_col[bin_mask].mean()
+
+                theta_mid = (bins[j] + bins[j + 1]) / 2
+                y_theoretical = item_response_fn_2PL(
+                    single_z2,
+                    single_z3,
+                    theta_mid
+                )
+                
+                diff = 1 - abs(y_empirical - y_theoretical)
+                diff_list.append(diff)
+
+    diff_array = np.array(diff_list)
+    mean_diff = diff_array.mean()
+    return mean_diff, diff_array
+
+def goodness_of_fit_2PL_plot(
+    theta: torch.Tensor,
+    z2: torch.Tensor,
+    z3: torch.Tensor,
+    y: torch.Tensor,
+    plot_path: str,
+    bin_size: int=6,
+):
+    mean_diff, diff_array = goodness_of_fit_2PL(
+        theta, z2, z3, y, bin_size
+    )
+    sample_means = []
+    for _ in range(100):
+        indices = np.random.choice(
+            len(diff_array), int(0.8 * len(diff_array)), replace=False
+        )
+        sample_mean = np.mean(diff_array[indices])
+        sample_means.append(sample_mean)
+    std_diff = np.std(sample_means)
+    
+    plt.figure(figsize=(10, 6))
+    plt.hist(diff_array, bins=40, density=True, alpha=0.4)
+    plt.xlabel(r'Difference between empirical and theoretical $P(y=1)$', fontsize=30)
+    plt.ylabel(r'Goodness of fit', fontsize=30)
+    plt.tick_params(axis='both', labelsize=25)
+    plt.xlim(0, 1)
+    plt.axvline(mean_diff, linestyle='--')
+    plt.text(
+        mean_diff, 
+        plt.gca().get_ylim()[1], 
+        f'{mean_diff:.2f} $\\pm$ {3 * std_diff:.2f}', 
+        ha='center', 
+        va='bottom', 
+        fontsize=25
+    )
+    plt.savefig(plot_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    return mean_diff, std_diff
+
+def goodness_of_fit_3PL(
+    theta: torch.Tensor,
+    z1: torch.Tensor,
+    z2: torch.Tensor,
+    z3: torch.Tensor,
+    y: torch.Tensor,
+    bin_size: int=6,
+):
+    bin_start, bin_end = torch.min(theta), torch.max(theta)
+    bins = torch.linspace(bin_start, bin_end, bin_size+1)
+    print(bins)
+
+    diff_list = []
+    for i in tqdm(range(y.shape[1])):
+        single_z1 = z1[i]
+        single_z2 = z2[i]
+        single_z3 = z3[i]
+        y_col = y[:, i]
+
+        for j in range(len(bins) - 1):
+            bin_mask = (theta >= bins[j]) & (theta < bins[j + 1]) & (y_col != -1)
+            if bin_mask.sum() > 0:  # Bin not empty
+                y_empirical = y_col[bin_mask].mean()
+
+                theta_mid = (bins[j] + bins[j + 1]) / 2
+                y_theoretical = item_response_fn_3PL(
+                    single_z1,
+                    single_z2,
+                    single_z3,
+                    theta_mid
+                )
+                
+                diff = 1 - abs(y_empirical - y_theoretical)
+                diff_list.append(diff)
+                
+    diff_array = np.array(diff_list)
+    mean_diff = diff_array.mean()
+    return mean_diff, diff_array
+
+def goodness_of_fit_3PL_plot(
+    theta: torch.Tensor,
+    z1: torch.Tensor,
+    z2: torch.Tensor,
+    z3: torch.Tensor,
+    y: torch.Tensor,
+    plot_path: str,
+    bin_size: int=6,
+):
+    mean_diff, diff_array = goodness_of_fit_3PL(
+        theta, z1, z2, z3, y, bin_size
+    )
+    sample_means = []
+    for _ in range(100):
+        indices = np.random.choice(
+            len(diff_array), int(0.8 * len(diff_array)), replace=False
+        )
+        sample_mean = np.mean(diff_array[indices])
+        sample_means.append(sample_mean)
+    std_diff = np.std(sample_means)
+    
+    plt.figure(figsize=(10, 6))
+    plt.hist(diff_array, bins=40, density=True, alpha=0.4)
+    plt.xlabel(r'Difference between empirical and theoretical $P(y=1)$', fontsize=30)
+    plt.ylabel(r'Goodness of fit', fontsize=30)
+    plt.tick_params(axis='both', labelsize=25)
+    plt.xlim(0, 1)
+    plt.axvline(mean_diff, linestyle='--')
+    plt.text(
+        mean_diff, 
+        plt.gca().get_ylim()[1], 
+        f'{mean_diff:.2f} $\\pm$ {3 * std_diff:.2f}', 
+        ha='center', 
+        va='bottom', 
+        fontsize=25
+    )
+    plt.savefig(plot_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    return mean_diff, std_diff
+
 def theta_corr_ctt(
     theta: np.array,
     y: np.array,
@@ -203,7 +445,8 @@ def theta_corr_ctt(
     
     if np.unique(ctt_scores_masked).size <= 3:
         warnings.warn(f"ctt_scores_masked has little value: {ctt_scores_masked}", UserWarning)
-    corr = np.corrcoef(theta_masked, ctt_scores_masked)[0, 1]
+    # corr = np.corrcoef(theta_masked, ctt_scores_masked)[0, 1]
+    corr, _ = spearmanr(theta_masked, ctt_scores_masked)
     return corr, theta_masked, ctt_scores_masked
 
 def theta_corr_ctt_plot(
@@ -218,7 +461,8 @@ def theta_corr_ctt_plot(
         indices = np.random.choice(
             len(theta_masked), int(0.8 * len(theta_masked)), replace=False
         )
-        sample_corr = np.corrcoef(theta_masked[indices], ctt_scores_masked[indices])[0, 1]
+        # sample_corr = np.corrcoef(theta_masked[indices], ctt_scores_masked[indices])[0, 1]
+        sample_corr, _ = spearmanr(theta_masked[indices], ctt_scores_masked[indices])
         sample_corrs.append(sample_corr)
     sample_std = np.std(sample_corrs)
     
@@ -257,7 +501,8 @@ def theta_corr_helm(
     aligned_helm_scores = merged_df['score'].values
     aligned_theta = merged_df['theta'].values
     
-    corr = np.corrcoef(aligned_theta, aligned_helm_scores)[0, 1]
+    # corr = np.corrcoef(aligned_theta, aligned_helm_scores)[0, 1]
+    corr, _ = spearmanr(aligned_theta, aligned_helm_scores)
     return corr, aligned_theta, aligned_helm_scores
 
 def theta_corr_helm_plot(
@@ -272,7 +517,8 @@ def theta_corr_helm_plot(
         indices = np.random.choice(
             len(theta), int(0.8 * len(theta)), replace=False
         )
-        sample_corr = np.corrcoef(theta[indices], helm_scores[indices])[0, 1]
+        # sample_corr = np.corrcoef(theta[indices], helm_scores[indices])[0, 1]
+        sample_corr, _ = spearmanr(theta[indices], helm_scores[indices])
         sample_corrs.append(sample_corr)
     sample_std = np.std(sample_corrs)
     
@@ -397,7 +643,7 @@ def plot_corr(
     xlabel,
     ylabel,
 ):
-    corr = np.corrcoef(data1, data2)[0, 1]
+    # corr = np.corrcoef(data1, data2)[0, 1]
     plt.figure(figsize=(6, 6))
     plt.scatter(data1, data2, color='blue')
     plt.xlabel(xlabel, fontsize=25)
@@ -423,8 +669,8 @@ def plot_corr_double(
     xlabel,
     ylabel,
 ):
-    corr_train = np.corrcoef(data1_train, data2_train)[0, 1]
-    corr_test = np.corrcoef(data1_test, data2_test)[0, 1]
+    # corr_train = np.corrcoef(data1_train, data2_train)[0, 1]
+    # corr_test = np.corrcoef(data1_test, data2_test)[0, 1]
     plt.figure(figsize=(6, 6))
     plt.scatter(data1_train, data2_train, color='blue', label='Train')
     plt.scatter(data1_test, data2_test, color='red', label='Test')
@@ -492,57 +738,43 @@ def plot_hist(
     plt.savefig(plot_path, dpi=300, bbox_inches='tight')
     plt.close()
 
-def plot_rewards(rewards, plot_path):
-    plt.figure(figsize=(6, 6))
-    steps = range(0, 100, 10) 
-    for i in range(len(rewards[0])):
-        prompt_rewards = [reward[i] for reward in rewards]
-        plt.plot(steps, prompt_rewards, marker='o')
-    plt.ylabel(r'Reward', fontsize=25)
-    plt.tick_params(axis='both', labelsize=16)
-    plt.savefig(plot_path, dpi=300, bbox_inches='tight')
-    plt.close()
-    
-def plot_loss(
-    losses,
-    plot_path,
-    ylabel,
-):
-    plt.figure(figsize=(6, 6))
-    plt.plot(losses)
-    plt.tick_params(axis='both', labelsize=16)
-    plt.ylabel(ylabel, fontsize=25)
-    plt.ylim(0, 10)
-    plt.savefig(plot_path, dpi=300, bbox_inches='tight')
-    plt.close()
-
 def plot_cat(
     randoms,
     cats,
+    cat_subs,
     plot_path,
     ylabel,
 ):
     plt.figure(figsize=(6, 6))
-    plt.plot(randoms, label='Random', color='red', linewidth=3)
-    plt.plot(cats, label='Fisher', color='blue', linewidth=3)
+    plt.plot(randoms, label='Random', color='red', linewidth=2)
+    plt.plot(cats, label='Fisher large', color='blue', linewidth=2)
+    plt.plot(cat_subs, label='Fisher small', color='darkgoldenrod', linewidth=2)
     plt.tick_params(axis='both', labelsize=25)
     plt.ylabel(ylabel, fontsize=25)
     plt.legend(fontsize=25)
     plt.savefig(plot_path, dpi=300, bbox_inches='tight')
     plt.close()
 
-def plot_hard_easy(theta_hats_all, y_means_all, theta, y, plot_path):
+def plot_hard_easy(
+    theta_hats: list,
+    y_means: list,
+    theta: float,
+    y_mean: float, 
+    plot_path: str,
+):
     plt.figure(figsize=(8, 6))
-    plt.hist(theta_hats_all, bins=40, color='red', alpha=0.2, label='IRT Estimation', density=True)
-    plt.hist(y_means_all, bins=40, color='blue', alpha=0.2, label='CTT Estimation', density=True)
+    plt.hist(theta_hats, bins=40, color='red', alpha=0.2, label='IRT Estimation', density=True)
+    plt.hist(y_means, bins=40, color='blue', alpha=0.2, label='CTT Estimation', density=True)
     plt.axvline(x=theta, color='red', linestyle='-', linewidth=2)
-    plt.axvline(x=y.mean().item() * 6 - 3, color='blue', linewidth=2)
-    sns.kdeplot(theta_hats_all, color='red', linewidth=2, bw_adjust=2)
+    plt.axvline(x=y_mean, color='blue', linewidth=2)
+    sns.kdeplot(theta_hats, color='red', linewidth=2, bw_adjust=2)
     plt.xlabel(r'Ability', fontsize=25)
+    plt.xlim(-6,6)
     plt.ylabel(r'Density', fontsize=25)
     plt.legend(fontsize=20)
     plt.tick_params(axis='both', labelsize=20)
     plt.savefig(plot_path, dpi=300, bbox_inches='tight')
+    plt.close()
     
 PLOT_NAME_MAP = {
     'wikifact': 'wikifact',

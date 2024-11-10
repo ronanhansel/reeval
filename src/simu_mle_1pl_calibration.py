@@ -4,10 +4,10 @@ import torch
 import wandb
 import pandas as pd
 from tqdm import tqdm
-from utils import item_response_fn_1PL, set_seed
+from utils import item_response_fn_1PL, set_seed, goodness_of_fit_1PL_plot, theta_corr_ctt_plot
 import torch.optim as optim
 
-def nonamor_calibration(
+def simu_mle_1pl_calibration(
     response_matrix: torch.Tensor,
     max_epoch: int=3000
 ):
@@ -49,21 +49,38 @@ def nonamor_calibration(
     return theta_hat, z_hat
 
 if __name__ == "__main__":
-    wandb.init(project="nonamor_calibration")
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset', type=str, required=True)
     args = parser.parse_args()
     
     set_seed(42)
     input_dir = '../data/pre_calibration'
-    output_dir = f'../data/nonamor_calibration/{args.dataset}'
+    output_dir = f'../data/simu_mle_1pl_calibration/{args.dataset}'
+    plot_dir = f'../plot/simu_mle_1pl_calibration/{args.dataset}'
     os.makedirs(output_dir, exist_ok=True)
+    os.makedirs(plot_dir, exist_ok=True)
     
     y = pd.read_csv(f'{input_dir}/{args.dataset}/matrix.csv', index_col=0).values
-    theta_hat, z_hat = nonamor_calibration(torch.tensor(y, dtype=torch.float32))
+    # theta_hat, z_hat = simu_mle_1pl_calibration(torch.tensor(y, dtype=torch.float32))
     
-    z_df = pd.DataFrame(z_hat.cpu().detach().numpy(), columns=["z"])
-    z_df.to_csv(f"{output_dir}/nonamor_z.csv", index=False)
-    theta_df = pd.DataFrame(theta_hat.cpu().detach().numpy(), columns=["theta"])
-    theta_df.to_csv(f"{output_dir}/nonamor_theta.csv", index=False)
+    # z_df = pd.DataFrame(z_hat.cpu().detach().numpy(), columns=["z"])
+    # z_df.to_csv(f"{output_dir}/nonamor_z.csv", index=False)
+    # theta_df = pd.DataFrame(theta_hat.cpu().detach().numpy(), columns=["theta"])
+    # theta_df.to_csv(f"{output_dir}/nonamor_theta.csv", index=False)
+    
+    z_hat = torch.tensor(pd.read_csv(f"{output_dir}/nonamor_z.csv")['z'].values)
+    theta_hat = torch.tensor(pd.read_csv(f"{output_dir}/nonamor_theta.csv")['theta'].values)
+    
+    _, _ = goodness_of_fit_1PL_plot(
+        z=z_hat,                                
+        theta=theta_hat,
+        y=torch.tensor(y, dtype=torch.float32),
+        plot_path=f"{plot_dir}/goodness_of_fit_{args.dataset}.png"
+    )
+    
+    _, _ = theta_corr_ctt_plot(
+        theta=theta_hat.cpu().detach().numpy(),
+        y=y,
+        plot_path=f"{plot_dir}/theta_corr_ctt_{args.dataset}",
+    )
     

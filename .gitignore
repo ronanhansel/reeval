@@ -20,4 +20,3 @@ wandb/
 **/*.ipynb_checkpoints/
 a.py
 plot.zip
-item_invariance_of_ability_estimation.ipynb
