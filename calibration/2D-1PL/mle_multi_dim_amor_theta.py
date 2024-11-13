@@ -136,13 +136,16 @@ if __name__ == "__main__":
     os.makedirs(output_dir, exist_ok=True)
     os.makedirs(plot_dir, exist_ok=True)
     
-    model_id_df = pd.read_csv('configs/model_id_ver1.csv')
+    model_id_df = pd.read_csv('configs/model_id_final.csv')
     valid_model_names = model_id_df['model_names_reeval'].values
     feat_matrix = model_id_df['FLOPs (1E21)'].values
     feat_matrix = np.log(feat_matrix)
     # feat_matrix = (feat_matrix - feat_matrix.mean(axis=0)) / feat_matrix.std(axis=0)
     
-    valid_model_names_test = ['meta_llama-2-70b', 'meta_llama-2-7b', 'meta_llama-2-13b']
+    # valid_model_names_test = ['meta_llama-2-70b', 'meta_llama-2-7b', 'meta_llama-2-13b']
+    test_size = int(len(valid_model_names) * 0.2)
+    valid_model_names_test = list(np.random.choice(valid_model_names, size=test_size, replace=False))
+    print(valid_model_names_test)
     valid_model_indices_test = [i for i, name in enumerate(valid_model_names) if name in valid_model_names_test]
     feat_matrix_test = feat_matrix[valid_model_indices_test]
     valid_model_names_train = [name for name in valid_model_names if name not in valid_model_names_test]
@@ -192,9 +195,12 @@ if __name__ == "__main__":
     # )
     # z_df = pd.DataFrame(z_hat.cpu().detach().numpy(), columns=["z"])
     # z_df.to_csv(f"{output_dir}/z_con_{args.constraint}.csv", index=False)
-    # np.save(f"{output_dir}/W_con_{args.constraint}.npy", W.cpu().detach().numpy())
-    # np.save(f"{output_dir}/b_con_{args.constraint}.npy", b.cpu().detach().numpy())
-    # np.save(f"{output_dir}/a_con_{args.constraint}.npy", a.cpu().detach().numpy())
+    # W = W.cpu().detach().numpy()
+    # b = b.cpu().detach().numpy()
+    # a = a.cpu().detach().numpy()
+    # np.save(f"{output_dir}/W_con_{args.constraint}.npy", W)
+    # np.save(f"{output_dir}/b_con_{args.constraint}.npy", b)
+    # np.save(f"{output_dir}/a_con_{args.constraint}.npy", a)
     
     z_hat = pd.read_csv(f"{output_dir}/z_con_{args.constraint}.csv").values
     W = np.load(f"{output_dir}/W_con_{args.constraint}.npy")
