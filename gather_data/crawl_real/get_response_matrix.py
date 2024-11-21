@@ -71,14 +71,15 @@ def get_bool_answers_logprob(data, threshold):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--leaderboard", type=str, default="classic", choices=["classic", "mmlu"]
+        "--leaderboard", type=str, default="classic", choices=["classic", "mmlu", "thaiexam"]
     )
-    parser.add_argument("--dataset", type=str, required=True)  # use wandb sweep, mmlu
+    parser.add_argument("--dataset", type=str, required=True)  # use wandb sweep, mmlu, thai_exam
     args = parser.parse_args()
 
     data_folder = snapshot_download(
         repo_id="stair-lab/reeval_jsons", repo_type="dataset"
     )
+    # data_folder = "../../data/gather_data/crawl_real"
 
     input_dir = f"{data_folder}/jsons/{args.dataset}_json"
     output_dir = f"../../data/pre_calibration/{args.dataset}"
@@ -98,7 +99,7 @@ if __name__ == "__main__":
     # 1. Multiple choice questions
     # 2. Open-ended questions
     # 3. Questions with no references with logprob
-    
+
     logprob_tag = False
     with open(f"{input_dir}/{full_strings[0]}.json", "r") as f:
         data = json.load(f)

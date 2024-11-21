@@ -2,12 +2,13 @@ from torch import nn
 
 
 class MLP(nn.Module):
-    def __init__(self, input_dim, n_layers, hidden_dim, output_dim):
+    def __init__(self, input_dim, n_layers, hidden_dim, output_dim, device="cpu"):
         super(MLP, self).__init__()
         self.input_dim = input_dim
         self.n_layers = n_layers
         self.hidden_dim = hidden_dim
         self.output_dim = output_dim
+        self.device = device
 
         if n_layers == 1:
             layers = [
@@ -28,7 +29,7 @@ class MLP(nn.Module):
                 ]
             )
 
-        self.model = nn.Sequential(*layers)
+        self.model = nn.Sequential(*layers).to(device)
 
     def forward(self, x):
         return self.model(x)
