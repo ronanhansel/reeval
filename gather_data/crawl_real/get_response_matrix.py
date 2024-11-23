@@ -3,15 +3,32 @@ import json
 import os
 import re
 
+import numpy as np
 import pandas as pd
-from dataset_info_stats import delete_model_name
 from huggingface_hub import HfApi, snapshot_download
 from tqdm import tqdm
+
+
+def delete_model_name(filename):
+    filename = re.sub(r",stop=hash", "", filename)
+    filename = re.sub(r",global_prefix=nlg", "", filename)
+    return re.sub(r"model=[^,]*,?", "", filename).strip(",")
 
 
 def extract_model_name(filename):
     match = re.search(r"model=([^,]*)", filename)
     return match.group(1)
+
+
+def remove_duplicates(lst):
+    seen = set()
+    removed_indices = []
+    for i, item in enumerate(lst):
+        if item not in seen:
+            seen.add(item)
+        else:
+            removed_indices.append(i)
+    return removed_indices
 
 
 def get_bool_answers(data):
@@ -62,7 +79,7 @@ def get_bool_answers(data):
 def get_bool_answers_logprob(data, threshold):
     bool_answers = []
     for question in data["request_states"]:
-        assert not question["instance"]["references"]
+        # assert not question["instance"]["references"]
         logprob = question["result"]["completions"][0]["logprob"]
         bool_answers.append(int(logprob > threshold))
     return bool_answers
@@ -73,17 +90,16 @@ if __name__ == "__main__":
     parser.add_argument(
         "--leaderboard", type=str, default="classic", choices=["classic", "mmlu", "thaiexam"]
     )
-    parser.add_argument("--dataset", type=str, required=True)  # use wandb sweep, mmlu, thai_exam
+    parser.add_argument("--dataset", type=str, required=True) 
+    # use wandb sweep, mmlu, thai_exam
     args = parser.parse_args()
 
-    data_folder = snapshot_download(
-        repo_id="stair-lab/reeval_jsons", repo_type="dataset"
-    )
-    # data_folder = "../../data/gather_data/crawl_real"
+    # data_folder = snapshot_download(
+    #     repo_id=f"stair-lab/reeval_jsons", repo_type="dataset"
+    # )
+    data_folder = "../../data/gather_data/crawl_real"
 
     input_dir = f"{data_folder}/jsons/{args.dataset}_json"
-    output_dir = f"../../data/pre_calibration/{args.dataset}"
-    os.makedirs(output_dir, exist_ok=True)
 
     full_strings_all = pd.read_csv(
         f"{data_folder}/crawl_dataset_name_{args.leaderboard}.csv"
@@ -91,9 +107,16 @@ if __name__ == "__main__":
     full_strings = [
         f for f in full_strings_all if (f.split(":")[0].split(",")[0] == args.dataset)
     ]
+    
+    if args.dataset != "commonsense":
+        full_strings = [f for f in full_strings if "ablation" not in f]
+    if args.dataset == "truthful_qa":
+        full_strings = [f for f in full_strings if "max_train_instances=0" not in f]
+    
     all_model_names = list(set([extract_model_name(f) for f in full_strings]))
     all_model_names = sorted(all_model_names, key=lambda x: x[0])
     non_model_strings = list(set([delete_model_name(f) for f in full_strings]))
+    print(non_model_strings)
 
     # Three types of questions:
     # 1. Multiple choice questions
@@ -123,7 +146,7 @@ if __name__ == "__main__":
         max_len_file_name = ""
         single_matrix = {name: [] for name in all_model_names}
 
-        for filename in tqdm(os.listdir(input_dir)):
+        for filename in tqdm(sorted(os.listdir(input_dir))):
             file_name_without_json = filename[:-5]
             if filename.endswith(".json") and (
                 delete_model_name(file_name_without_json) == non_model_string
@@ -154,40 +177,53 @@ if __name__ == "__main__":
         single_matrix_df = pd.DataFrame(single_matrix).T
         single_matrix_df.columns = [f"{j}_{non_model_string}" for j in range(max_len)]
 
+        assert single_matrix_df.index.tolist() == all_model_names
+        
         if i == 0:
             all_matrix_df = single_matrix_df
         else:
             all_matrix_df = pd.concat([all_matrix_df, single_matrix_df], axis=1)
 
-    assert all_matrix_df.shape[0] == len(all_model_names)
-
-    bool_delete_list = []
-    for col_name, col_data in all_matrix_df.items():
-        if set(col_data.unique()).issubset({0, -1}) or set(col_data.unique()).issubset(
-            {1, -1}
-        ):
-            all_matrix_df = all_matrix_df.drop(columns=[col_name])
-            bool_delete_list.append(1)
-        else:
-            bool_delete_list.append(0)
-
-    all_matrix_df.to_csv(f"{output_dir}/matrix.csv", index_label=None)
-
-    # index search
-    search_list = []
+    # load all the text for each question
+    search_dict = {"idx":[], "text":[], "is_deleted":[]}
     base_idx = 0
     for i, non_model_string in enumerate(non_model_strings):
         with open(f"{input_dir}/{max_len_file_names[i]}", "r") as f:
             data = json.load(f)
         for j, question in enumerate(data["request_states"]):
-            text = question["instance"]["input"]["text"]
-            search_list.append([base_idx + j, text, bool_delete_list[base_idx + j]])
+            text = question["request"]["prompt"]
+            search_dict["idx"].append(base_idx + j)
+            search_dict["text"].append(text)
+            search_dict["is_deleted"].append(0)
         base_idx += max_lens[i]
+    
+    # delete duplicate question text
+    removed_indices = remove_duplicates(search_dict["text"])
+    for idx in removed_indices:
+        search_dict["is_deleted"][idx] = 1
 
-    search_df = pd.DataFrame(search_list, columns=["idx", "text", "is_deleted"])
+    # delete questions that all models succeed/fail
+    for idx, (col_name, col_data) in enumerate(all_matrix_df.items()):
+        if set(col_data.unique()).issubset({0, -1}) or set(col_data.unique()).issubset(
+            {1, -1}
+        ):
+            search_dict["is_deleted"][idx] = 1
+    
+    # delete "is_deleted" indices from all_matrix_df
+    all_matrix_df = all_matrix_df.loc[:, all_matrix_df.columns[np.array(search_dict["is_deleted"]) == 0]]
+    
+    # save data
+    if args.dataset == "dyck_language_np=3":
+        args.dataset = "dyck_language_np3"
+    output_dir = f"../../data/pre_calibration/{args.dataset}"
+    os.makedirs(output_dir, exist_ok=True)
+    search_df = pd.DataFrame(search_dict)
+    print(f"response matrix shape of {args.dataset}: {all_matrix_df.shape}")
+    all_matrix_df.to_csv(f"{output_dir}/matrix.csv", index_label=None)
+    
     search_df.to_csv(f"{output_dir}/search.csv", index=False, escapechar="\\")
 
-    # Upload the content of the local folder to your remote Space
+    # Upload the content of the lbocal folder to your remote Space
     api = HfApi()
     api.upload_folder(
         folder_path=f"{output_dir}",
