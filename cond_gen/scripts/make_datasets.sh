@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# List of dataset names
 datasets=(
     "airbench"
     "twitter_aae"
@@ -25,11 +26,20 @@ datasets=(
     "lsat_qa"
     "bold"
     "dyck_language_np3"
-    "combined_data"
+    "thai_exam"
 )
 
 for dataset in "${datasets[@]}"; do
-    echo "Run TAE on $dataset 1PL"
-    export CUDA_VISIBLE_DEVICES=0
-    python tae_eval.py --dataset $dataset 
+    echo "Running $dataset"
+    python 1_sft_dataset.py --dataset $dataset --model meta-llama/Meta-Llama-3-8B
+done
+
+for dataset in "${datasets[@]}"; do
+    echo "Running $dataset"
+    python 1_sft_dataset.py --dataset $dataset --model mistralai/Mistral-7B-Instruct-v0.3
+done
+
+for dataset in "${datasets[@]}"; do
+    echo "Creating PPO dataset $dataset"
+    python ppo_dataset.py --dataset $dataset
 done

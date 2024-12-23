@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# List of datasets
+# List of dataset names
 datasets=(
     "airbench"
     "twitter_aae"
@@ -26,12 +26,10 @@ datasets=(
     "lsat_qa"
     "bold"
     "dyck_language_np3"
-    "combined_data"
+    "thai_exam"
 )
 
-# Iterate through each dataset and run the calibrate.py script
-for dataset in "${datasets[@]}"
-do
-    echo "Running calibration for dataset: $dataset"
-    python calibrate.py --dataset "$dataset" --D 1 --PL 1 --max_epoch 1000 &
+for dataset in "${datasets[@]}"; do
+    echo "Runing SFT analysis on $dataset"
+    python sft_analysis.py --dataset $dataset --run_generation
 done

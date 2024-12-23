@@ -26,6 +26,7 @@ parameters:
     - lsat_qa
     - bold
     - dyck_language_np3
+    - thai_exam
     - combined_data
   PL:
     values: [1, 2, 3]
@@ -34,15 +35,15 @@ parameters:
   fitting_method:
     values: [mle, em]
   amortized_question:
-    values: [True, False]
+    values: [False, True]
   amortized_student:
-    values: [True, False]
-  n_layers:
-    values: [2, 3, 4, 5]
-  hidden_dim:
-    values: [32, 64, 128]
+    values: [False]
   report_to:
     values: [wandb]
+  embedder_name:
+    values: [meta-llama/Meta-Llama-3-8B, mistralai/Mistral-7B-v0.3]
+  force_run:
+    values: [True]
  
 program: calibrate.py
 project: calibration
