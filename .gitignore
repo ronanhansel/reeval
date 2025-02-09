@@ -21,3 +21,5 @@ results/
 hard_easy_test_new_em/
 calibration/nonamortized_calibration/run_calibration.sh
 archived_data/
+benchmark_output/
+google-cloud-sdk/
