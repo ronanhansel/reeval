@@ -36,7 +36,7 @@ def process_joint_matrices(csv_dir, output_dir):
 
             if isinstance(metric_name, str):
                 for i, row in tqdm(scenario_responses.iterrows(), total=len(scenario_responses)):
-                    if not row[metric_name]:
+                    if pd.isna(row[metric_name]):
                         continue
                     bm_matrix[int(row["model_id"]), iid2index[int(row["instance_id"])]] = int(
                         float(row[metric_name]) >= THRESHOLDS[metric_name]
@@ -103,7 +103,7 @@ def process_split_matrices(csv_dir, output_dir):
 
             if isinstance(metric_name, str):
                 for i, row in tqdm(scenario_responses.iterrows(), total=len(scenario_responses)):
-                    if not row[metric_name]:
+                    if pd.isna(row[metric_name]):
                         continue
                     bm_matrix[int(row["model_id"]), iid2index[int(row["instance_id"])]] = int(
                         float(row[metric_name]) >= THRESHOLDS[metric_name]
