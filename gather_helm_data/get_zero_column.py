@@ -49,7 +49,6 @@ if __name__ == "__main__":
     # not every name in model_key is in flop, and not every name in flop is in model_key
     # the resulting dataframe should has the same length as model_key
     model_key_ = pd.merge(model_key, flop, left_on="name", right_on="model_names_reeval", how="left")
-    breakpoint()
 
     # remove the few-shot example from prompt
     pattern = scenario2pattern[args.dataset]
@@ -64,13 +63,6 @@ if __name__ == "__main__":
         question_contexts.append(mmlu_context % subject_i)
     question_keys["question_contexts"] = question_contexts
 
-    # add a column for embedding
-    content_to_embed = [context + question for context, question in zip(question_contexts, last_questions)]
-    model = LLM(model="intfloat/e5-mistral-7b-instruct", enforce_eager=True)
-    embeddings = model.encode(content_to_embed)
-    embeddings = [emb.outputs.embedding for emb in embeddings]
-    question_keys["embedding"] = embeddings
-
     # merge data and instances by instance_id
     # instance_id in data is float, while in instances is int
     # but they are the same
@@ -84,6 +76,14 @@ if __name__ == "__main__":
     # save the data to parquet form
     data.to_parquet("data.parquet")
 
+    # add a column for embedding (each embedding is a list of 4096 floats)
+    content_to_embed = [context + question for context, question in zip(question_contexts, last_questions)]
+    model = LLM(model="intfloat/e5-mistral-7b-instruct", enforce_eager=True)
+    embeddings = model.encode(content_to_embed)
+    embeddings = [emb.outputs.embedding for emb in embeddings]
+    question_keys["embedding"] = embeddings
+    question_keys.to_parquet("question.parquet")
+
     # upload the data to huggingface hub
     api = HfApi()
     api.create_repo("stair-lab/reeval_another_repo", repo_type="dataset", exist_ok=True)
@@ -93,7 +93,14 @@ if __name__ == "__main__":
         path_or_fileobj="data.parquet",
         repo_type="dataset"
     )
+    api.upload_file(
+        repo_id="stair-lab/reeval_another_repo",
+        path_in_repo="mmlu/question.parquet",
+        path_or_fileobj="question.parquet",
+        repo_type="dataset"
+    )
 
     # load the data from huggingface
     data_folder = snapshot_download(repo_id="stair-lab/reeval_another_repo", repo_type="dataset")
-    data = pd.read_parquet(f"{data_folder}/mmlu/data.parquet", engine="pyarrow")
+    data = pd.read_parquet(f"{data_folder}/mmlu/data.parquet", engine="fastparquet")
+    question_keys = pd.read_parquet(f"{data_folder}/mmlu/question.parquet", engine="fastparquet")
