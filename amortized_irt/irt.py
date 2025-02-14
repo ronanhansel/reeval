@@ -44,27 +44,16 @@ class IRT(nn.Module):
             lf_shape = ab_shape[:-1] + [1] + [ab_shape[-1]]
             loading_factor = torch.ones(lf_shape).to(ability)
 
-
-        n_mc, batch, D = ability.shape
-        n_questions = difficulty.shape[0]
-
-        # remove the D dimension
-        ability = ability.squeeze(-1)
-
-        ability = ability[..., None].repeat(1, 1, n_questions)
-        difficulty = difficulty[None, None, :].repeat(n_mc, batch, 1)
-        return torch.sigmoid(ability - difficulty)
-
-        # ability = ability[..., None, :]
-        # difficulty = difficulty[..., None, :]
-        # if ability.shape == difficulty.shape:
-        #     return guessing + (1 - guessing) * torch.sigmoid(
-        #         disciminatory * (ability * loading_factor) + difficulty
-        #     )
-        # else:
-        #     return guessing + (1 - guessing) * torch.sigmoid(
-        #         disciminatory * (ability * loading_factor).sum(-1) + difficulty
-        #     )
+        ability = ability[..., None, :]
+        difficulty = difficulty[..., None, :]
+        if ability.shape == difficulty.shape:
+            return guessing + (1 - guessing) * torch.sigmoid(
+                disciminatory * (ability * loading_factor) + difficulty
+            )
+        else:
+            return guessing + (1 - guessing) * torch.sigmoid(
+                disciminatory * (ability * loading_factor).sum(-1) + difficulty
+            )
 
     def init_parameters(
         self,
@@ -219,53 +208,6 @@ class IRT(nn.Module):
         return self.compute_prob(
             ability, difficulty, disciminatory, guessing, loading_factor
         )
-
-    def mle(
-        self,
-        max_epoch: int,
-        response_matrix: torch.Tensor,
-        embedding=None,
-        model_features=None,
-    ):
-        if self.amortize_item or self.amortize_student:
-            optimizer = optim.Adam(
-                self.parameters(),
-                lr=1e-3,
-                weight_decay=1e-4,
-            )
-        else:
-            optimizer = optim.Adam(self.parameters(), lr=0.01)
-
-        if self.amortize_student:
-            self.ability_mask = model_features[:, 0] != -1
-            response_matrix = response_matrix[self.ability_mask]
-
-        mask = response_matrix != -1
-        masked_response_matrix = response_matrix[mask]
-
-        pbar = tqdm(range(max_epoch))
-        for _ in pbar:
-            if self.amortize_item:
-                self.item_parameters = self.item_parameters_nn(embedding)
-
-            if self.amortize_student:
-                self.ability = self.ability_nn(model_features)
-
-            prob_matrix = self.forward()
-
-            if self.amortize_student:
-                masked_prob_matrix = prob_matrix[self.ability_mask][mask]
-            else:
-                masked_prob_matrix = prob_matrix[mask]
-
-            berns = torch.distributions.Bernoulli(probs=masked_prob_matrix)
-            loss = -berns.log_prob(masked_response_matrix).mean()
-            loss.backward()
-            optimizer.step()
-            optimizer.zero_grad()
-            pbar.set_postfix({"loss": loss.item()})
-            if self.report_to is not None:
-                wandb.log({"loss": loss.item()})
 
     def em(
         self,
