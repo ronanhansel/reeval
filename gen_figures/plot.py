@@ -9,7 +9,7 @@ from utils.utils import goodness_of_fit
 plt.rcParams.update(bundles.iclr2024())
 plt.style.use("seaborn-v0_8-paper")
 
-from amortized_irt import IRT
+from amortized_irt.irt import IRT
 from utils.constants import SHORT_NAME_MAPPING
 
 

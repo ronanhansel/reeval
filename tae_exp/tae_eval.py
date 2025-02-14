@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 import pandas as pd
 import torch
-from amortized_irt import IRT
+from amortized_irt.irt import IRT
 from huggingface_hub import HfApi, snapshot_download
 from scipy.stats import spearmanr
 from sklearn.metrics import roc_auc_score

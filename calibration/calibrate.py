@@ -5,7 +5,7 @@ import pickle
 import pandas as pd
 import torch
 import wandb
-from amortized_irt import IRT
+from amortized_irt.irt import IRT
 from check_calibration_results import check_results
 from huggingface_hub import HfApi, snapshot_download
 from utils.utils import arg2str, set_seed, str2bool
@@ -21,8 +21,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--fitting_method", type=str, default="mle", choices=["mle", "mcmc", "em"]
     )
-    parser.add_argument("--train_size", type=float, default=0.8)
-    parser.add_argument("--max_epoch", type=int, default=5000)
+    parser.add_argument("--train_size", type=float, default=1)
+    parser.add_argument("--max_epoch", type=int, default=10000)
     parser.add_argument("--amortized_question", type=str2bool, default=False)
     parser.add_argument("--amortized_student", type=str2bool, default=False)
     parser.add_argument("--n_layers", type=int, default=1)
@@ -148,6 +148,7 @@ if __name__ == "__main__":
         device=device,
         report_to=args.report_to,
     )
+
     irt_model.fit(
         max_epoch=args.max_epoch,
         response_matrix=response_matrix,
@@ -161,6 +162,18 @@ if __name__ == "__main__":
     # save results
     abilities = irt_model.get_abilities().cpu().detach().tolist()
     item_parms = irt_model.get_item_parameters().cpu().detach().tolist()
+
+    # save to csv
+    import numpy as np
+    abilities_df = np.array(abilities)
+    # flatten the list of lists
+    abilities_df = abilities_df.flatten()
+    abilities_df = pd.DataFrame(abilities_df)
+    abilities_df.to_csv(f"abilities_python.csv", index=False, header=False)
+    item_parms = np.array(item_parms)
+    difficulties = item_parms[:, 0]
+    difficulties = pd.DataFrame(difficulties)
+    difficulties.to_csv(f"difficulties_python.csv", index=False, header=False)
 
     pickle.dump(abilities, open(f"{output_dir}/abilities.pkl", "wb"))
     pickle.dump(item_parms, open(f"{output_dir}/item_parms.pkl", "wb"))
