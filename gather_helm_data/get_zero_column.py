@@ -4,6 +4,7 @@ import pandas as pd
 from huggingface_hub import HfApi, snapshot_download
 import pickle
 from vllm import LLM
+from sentence_transformers import SentenceTransformer
 
 scenario2pattern = {
     "mmlu": r"(Question:)"
@@ -76,31 +77,60 @@ if __name__ == "__main__":
     # save the data to parquet form
     data.to_parquet("data.parquet")
 
-    # add a column for embedding (each embedding is a list of 4096 floats)
-    content_to_embed = [context + question for context, question in zip(question_contexts, last_questions)]
-    model = LLM(model="intfloat/e5-mistral-7b-instruct", enforce_eager=True)
-    embeddings = model.encode(content_to_embed)
-    embeddings = [emb.outputs.embedding for emb in embeddings]
-    question_keys["embedding"] = embeddings
-    question_keys.to_parquet("question.parquet")
-
     # upload the data to huggingface hub
     api = HfApi()
-    api.create_repo("stair-lab/reeval_another_repo", repo_type="dataset", exist_ok=True)
+    # api.create_repo("stair-lab/reeval_another_repo", repo_type="dataset", exist_ok=True)
     api.upload_file(
         repo_id="stair-lab/reeval_another_repo",
         path_in_repo="mmlu/data.parquet",
         path_or_fileobj="data.parquet",
         repo_type="dataset"
     )
-    api.upload_file(
-        repo_id="stair-lab/reeval_another_repo",
-        path_in_repo="mmlu/question.parquet",
-        path_or_fileobj="question.parquet",
-        repo_type="dataset"
-    )
+
+    # add a column for embedding (each embedding is a list of 4096 floats)
+    model_name = "Alibaba-NLP/gte-Qwen2-7B-instruct" # "intfloat/e5-mistral-7b-instruct"
+    # model = LLM(model=model_name, enforce_eager=True)
+    model = SentenceTransformer(model_name, trust_remote_code=True)
+
+    pool = model.start_multi_process_pool()
+
+    embed_context_and_question_together = True
+    if embed_context_and_question_together:
+        content_to_embed = [context + question for context, question in zip(question_contexts, last_questions)]
+        embeddings = model.encode_multi_process(content_to_embed, pool, show_progress_bar=True, batch_size=32)
+        model.stop_multi_process_pool(pool)
+
+        embeddings = [emb.outputs.embedding for emb in embeddings]
+        question_keys[f"embeddings_{model_name.replace('/', '_')}"] = embeddings_last_questions
+        question_keys.to_parquet("question.parquet")
+
+        api.upload_file(
+            repo_id="stair-lab/reeval_another_repo",
+            path_in_repo="mmlu/question.parquet",
+            path_or_fileobj="question.parquet",
+            repo_type="dataset"
+        )
+
+    else:
+        embeddings_question_contexts = model.encode_multi_process(question_contexts, pool, show_progress_bar=True, batch_size=32)
+        embeddings_last_questions = model.encode_multi_process(last_questions, pool, show_progress_bar=True, batch_size=32)
+        model.stop_multi_process_pool(pool)
+
+        embeddings_question_contexts = [emb.tolist() for emb in embeddings_question_contexts]
+        embeddings_last_questions = [emb.tolist() for emb in embeddings_last_questions]
+        question_keys[f"embeddings_question_contexts_{model_name.replace('/', '_')}"] = embeddings_question_contexts
+        question_keys[f"embeddings_last_questions_{model_name.replace('/', '_')}"] = embeddings_last_questions
+        question_keys.to_parquet("question_separated_emb.parquet")
+
+        api.upload_file(
+            repo_id="stair-lab/reeval_another_repo",
+            path_in_repo="mmlu/question_separated_emb.parquet",
+            path_or_fileobj="question_separated_emb.parquet",
+            repo_type="dataset"
+        )
 
     # load the data from huggingface
     data_folder = snapshot_download(repo_id="stair-lab/reeval_another_repo", repo_type="dataset")
     data = pd.read_parquet(f"{data_folder}/mmlu/data.parquet", engine="fastparquet")
     question_keys = pd.read_parquet(f"{data_folder}/mmlu/question.parquet", engine="fastparquet")
+    question_keys = pd.read_parquet(f"{data_folder}/mmlu/question_separated_emb.parquet", engine="fastparquet")
