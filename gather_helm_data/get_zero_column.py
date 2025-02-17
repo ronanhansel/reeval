@@ -7,15 +7,24 @@ from vllm import LLM
 from sentence_transformers import SentenceTransformer
 
 scenario2pattern = {
-    "mmlu": r"(Question:)"
+    "mmlu": r"(Question:)",
+    "classic/civil_comment": r"(Passage:)"
     # TODO: this pattern do not work for all scenarios, but split by '\n\n' is also problemetic, should write a scenario2pattern config
 }
 
 
-mmlu_context = """
-    The following is a multiple choice (A, B, C, or D) question about %s from the Massive Multitask Language Understanding (MMLU) benchmark, 
-    designed to measure ability in knowledge-intensive question answering across 57 domains. 
-"""
+context = {
+    "mmlu": """
+        The following is a multiple choice (A, B, C, or D) question about %s from the Massive Multitask Language Understanding (MMLU) benchmark, 
+        designed to measure ability in knowledge-intensive question answering across 57 domains.""",
+    "classic/civil_comment": """
+        Below is a true/false question based on a corresponding passage from the Civil Comments benchmark designed to measure the ability to identify 
+        toxic comments. For this benchmark, a toxic comment is defined as one that attacks an individual's identity, includes insults or threats, 
+        or contains explicit sexual content, obscene language, or other forms of severe toxicity. The question is about %s demographics group.
+        """
+}
+
+dataset_scenario_scenarioid = pd.read_csv("dataset_scenario_scenarioid.csv")
 
 def extract_last_question(pattern, text):
     # Split into individual questions using 'Question:' as the delimiter
@@ -34,16 +43,38 @@ def extract_last_question(pattern, text):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset", type=str, required=True)  # mmlu/mmlu
+    parser.add_argument("--dataset", type=str, required=True)
     args = parser.parse_args()
 
     repo_id = "stair-lab/reeval_csv"
     data_folder = snapshot_download(repo_id=repo_id, repo_type="dataset")
     data = pickle.load(open(f"{data_folder}/{args.dataset}/responses.pkl", "rb"))
+
+    if args.dataset == "mmlu":
+        scenario = "mmlu"
+    elif args.dataset == "classic":
+        scenario = "civil_comment"
+
+    scenarios_id = dataset_scenario_scenarioid[dataset_scenario_scenarioid["scenario"] == scenario]["scenarioid"].values[0]
+    data = data[data["scenarios_id"] == scenarios_id]
+
+
     question_keys = pd.read_csv(f"{data_folder}/{args.dataset}/instances.csv")
+
+    for i in question_keys.scenarios_id.unique():
+        question_keys1 = question_keys[question_keys["scenarios_id"] == i]
+        print("scenarios_id: ", i)
+        print(len(question_keys1.raw_question.unique()))
+
+    breakpoint()
+    question_keys1 = question_keys[question_keys["scenarios_id"] == scenarios_id]
+    # question_keys_one_pertubation = question_keys[question_keys["perturbation"] == "mild_mix"]
+    # len(question_keys1.raw_question.unique())
+    # >>> 8178 -- this makes sense for 9 demographics groups and about 1000 instances per group
+    # and some groups share questions
+
     model_key = pd.read_csv(f"{data_folder}/model_df.csv")
     flop = pd.read_csv(f"{data_folder}/FLOP.csv")
-    # For model_names_reeval, replace("_", "/") 
     flop["model_names_reeval"] = flop["model_names_reeval"].str.replace("_", "/")
 
     # merge model_key with flop: `model_names_reeval` should match `name` in model_key
@@ -52,16 +83,27 @@ if __name__ == "__main__":
     model_key_ = pd.merge(model_key, flop, left_on="name", right_on="model_names_reeval", how="left")
 
     # remove the few-shot example from prompt
-    pattern = scenario2pattern[args.dataset]
+    pattern = scenario2pattern[f"{args.dataset}/{scenario}"]
     n_questions = len(question_keys["prompt"])
     last_questions = [extract_last_question(pattern, question_keys["prompt"][i]) for i in range(n_questions)]
     question_keys["question_content"] = last_questions
 
     question_contexts = []
     for i in range(n_questions):
-        subject_i = question_keys["subject"][i]
-        subject_i = subject_i.replace("_", " ")
-        question_contexts.append(mmlu_context % subject_i)
+        if args.dataset == "mmlu":
+            subject_i = question_keys["subject"][i]
+            subject_i = subject_i.replace("_", " ")
+            mmlu_context = context["mmlu"]
+            question_contexts.append(mmlu_context % subject_i)
+        elif args.dataset == "classic":
+            if scenario == "civil_comment":
+                breakpoint()
+                demographics_group_i = question_keys["demographics"][i]
+                demographics_group_i = demographics_group_i.replace("_", " ")
+                civil_comment_context = context["classic/civil_comment"]
+                question_contexts.append(civil_comment_context % demographics_group_i)
+
+
     question_keys["question_contexts"] = question_contexts
 
     # merge data and instances by instance_id

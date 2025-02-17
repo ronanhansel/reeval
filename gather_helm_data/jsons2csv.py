@@ -4,15 +4,17 @@ import pickle
 import pandas as pd
 from tqdm import tqdm
 from configs import RUNNING_ENVS, PROMPT_ENVS
+from types import MappingProxyType
+from os.path import join, exists
 
 BENCHMARKS = [
     # "air-bench",
-    # "classic",
+    "classic",
     # "cleva",
     # "decodingtrust",
-    # # "heim",
+    # "heim",
     # "lite",
-    "mmlu",
+    # "mmlu",
     # "instruct",
     # "image2structure",
     # "safety",
@@ -26,160 +28,114 @@ VLM_BENCHMARKS = [
 ]
 
 
+def init_MODEL_NAME2ID():
+    global MODEL_NAME2ID
+    if exists("CSV/model_df.csv"): model_df = pd.read_csv("CSV/model_df.csv")
+    else:
+        model_dfs = [get_list_models(f"helm_jsons/{b}") for b in BENCHMARKS]
+        model_df = pd.concat(model_dfs)
+        model_df = model_df.drop_duplicates(subset=["name"])
+        model_df = model_df.reset_index(drop=True)
+        model_df['model_id'] = model_df.index
+        model_df.to_csv("CSV/model_df.csv", index=False)
+    
+    # Create a dictionary of model name to model id
+    MODEL_NAME2ID = MappingProxyType(dict(zip(model_df['name'], model_df['model_id'])))
+
+init_MODEL_NAME2ID()
+
 def get_list_models(benchmark):
-    schema_folder = "releases"
-    if benchmark in VLM_BENCHMARKS:
-        schema_folder = "runs"
-    if os.path.exists(
-        os.path.join(benchmark, schema_folder)
-    ):
-        latest_release = sorted(
-            os.listdir(os.path.join(benchmark, schema_folder))
-        )[-1]
-        
-        if os.path.exists(
-            os.path.join(benchmark, schema_folder, latest_release, "schema.json")
-        ):
-            model_df = json.load(
-                open(
-                    os.path.join(
-                        benchmark, schema_folder, latest_release, "schema.json"
-                    )
-                )
-            )
+    schema_folder = "runs" if benchmark in VLM_BENCHMARKS else "releases"
+    if exists(join(benchmark, schema_folder)):
+        latest_release = sorted(os.listdir(join(benchmark, schema_folder)))[-1]
+        schema_path = join(benchmark, schema_folder, latest_release, "schema.json")
+        if exists(schema_path): 
+            with open(schema_path, "r") as file:
+                model_df = json.load(file)
             return pd.DataFrame(model_df["models"])
 
-        
     # In case the model schema is not found
     assert False, f"Model schema not found for {benchmark}"
-    
-    
-def merge_model_df(model_dfs):
-    model_df = pd.concat(model_dfs)
-    model_df = model_df.drop_duplicates(subset=["name"])
-    
-    # Reset the index
-    model_df = model_df.reset_index(drop=True)
-    
-    return model_df
 
 def get_run_path(benchmark):
-    if os.path.exists(
-        os.path.join(benchmark, "releases")
-    ):
-        latest_release = sorted(
-            os.listdir(os.path.join(benchmark, "releases"))
-        )[-1]
+    if exists(join(benchmark, "releases")):
+        latest_release = sorted(os.listdir(join(benchmark, "releases")))[-1]
+
+        path = join(benchmark, "releases", latest_release, "runs_to_run_suites.json")
+        if exists(path):
+            with open(path, "r") as file:
+                folder_dict = json.load(file)
+            return [join(benchmark, "runs", suite, run) for run, suite in folder_dict.items()]
         
-        if os.path.exists(
-            os.path.join(benchmark, "releases", latest_release, "runs_to_run_suites.json")
-        ):
-            folder_dict = json.load(
-                open(
-                    os.path.join(
-                        benchmark, "releases", latest_release, "runs_to_run_suites.json"
-                    )
-                )
-            )
-            
-            run_paths = []
-            for run, suite in folder_dict.items():
-                run_paths.append(os.path.join(benchmark, "runs", suite, run))
-                
-            return run_paths
-        
-    elif os.path.exists(
-        os.path.join(benchmark, "runs")
-    ):
-        all_releases = sorted(
-            os.listdir(os.path.join(benchmark, "runs"))
-        )
+    elif exists(join(benchmark, "runs")):
+        all_releases = sorted(os.listdir(join(benchmark, "runs")))
         
         run_paths = []
         for suite in all_releases:
-            if os.path.exists(
-                os.path.join(benchmark, "runs", suite, "runs_to_run_suites.json")
-            ):
-                folder_dict = json.load(
-                    open(
-                        os.path.join(
-                            benchmark, "runs", suite, "runs_to_run_suites.json"
-                        )
-                    )
-                )
-                
+            path = join(benchmark, "runs", suite, "runs_to_run_suites.json")
+            if exists(path):
+                with open(path, "r") as file:
+                    folder_dict = json.load(open(path))
+
                 for run, _ in folder_dict.items():
-                    run_paths.append(os.path.join(benchmark, "runs", suite, run))
-                
+                    run_paths.append(join(benchmark, "runs", suite, run))
+
         return run_paths
         
     # In case the run paths are not found
-    all_suites = os.listdir(os.path.join(benchmark, "runs"))
+    all_suites = os.listdir(join(benchmark, "runs"))
     # Filter out the suites that is folder and starting with letter "v"
-    run_paths = [
-        os.path.join(benchmark, "runs", suite)
+    return [
+        join(benchmark, "runs", suite)
         for suite in all_suites
-        if os.path.isdir(os.path.join(benchmark, "runs", suite))
+        if os.path.isdir(join(benchmark, "runs", suite))
         and suite[0] != "v"
     ]
-    
-    return run_paths
 
-def process_run(run_path, MODEL_NAME2ID, scenarios, instances, instance2index):
-    responses = {
-        "model_id": [],
-        "scenarios_id": [],
-        "instance_id": [],
-        "temperature": [],
-        "num_completions": [],
-        "top_k_per_token": [],
-        "max_tokens": [],
-        "stop_sequences": [],
-        "echo_prompt": [],
-        "top_p": [],
-        "presence_penalty": [],
-        "frequency_penalty": [],
-        "predicted_text": [],
-        "base64_images": [],
-    }
+def process_run(run_path, scenarios, instances, instance2index):
+    keys = [
+        "model_id", "scenarios_id", "instance_id", "temperature", "num_completions",
+        "top_k_per_token", "max_tokens", "stop_sequences", "echo_prompt", "top_p",
+        "presence_penalty", "frequency_penalty", "predicted_text", "base64_images"
+    ]
+    responses = {key: [] for key in keys}
+
     # Get model and scenario info
-    run_specs = json.load(open(os.path.join(run_path, "run_spec.json")))
+    run_specs = json.load(open(join(run_path, "run_spec.json")))
     model_name = run_specs["adapter_spec"]["model"]
     model_id = MODEL_NAME2ID[model_name]
     
-    if not run_specs["name"].startswith("legal_support"):
-        scenario_name = run_specs["name"].split(":")[0]
-    else:
-        scenario_name = run_specs["name"].split(",")[0]
+    delimiter = ":" if not run_specs["name"].startswith("legal_support") else ","
+    scenario_name = run_specs["name"].split(delimiter)[0]
+
     if scenario_name not in scenarios["name"]:
         scenario_id = len(scenarios["name"])
         scenarios["scenarios_id"].append(scenario_id)
         scenarios["name"].append(scenario_name)
-        
     else:
         scenario_id = scenarios["name"].index(scenario_name)
     
-    if os.path.exists(os.path.join(run_path, "instances.json")):
-        if os.path.exists(os.path.join(run_path, "display_requests.json")) and os.path.exists(os.path.join(run_path, "display_predictions.json")):
-            return process_response_1(responses, model_id, scenario_id, scenario_name, run_path, instances, instance2index)
-        elif os.path.exists(os.path.join(run_path, "scenario_state.json")) and os.path.exists(os.path.join(run_path, "per_instance_stats.json")):
-            return process_response_2(responses, model_id, scenario_id, scenario_name, run_path, instances, instance2index)
+    if not exists(join(run_path, "instances.json")):
         return pd.DataFrame(responses)
-    else:
-        return pd.DataFrame(responses)
+
+    if exists(join(run_path, "display_requests.json")) and exists(join(run_path, "display_predictions.json")):
+        return process_response_1(responses, model_id, scenario_id, scenario_name, run_path, instances, instance2index)
+
+    if exists(join(run_path, "scenario_state.json")) and exists(join(run_path, "per_instance_stats.json")):
+        return process_response_2(responses, model_id, scenario_id, scenario_name, run_path, instances, instance2index)
+
+    return pd.DataFrame(responses)
 
 def process_response_1(responses, model_id, scenario_id, scenario_name, run_path, instances, instance2index):
     # Read the prompt and prediction info
-    request_info = json.load(open(os.path.join(run_path, "display_requests.json")))
-    prediction_info = json.load(open(os.path.join(run_path, "display_predictions.json")))
-    instances_info = json.load(open(os.path.join(run_path, "instances.json")))
-    stats = json.load(open(os.path.join(run_path, "stats.json")))
+    request_info = json.load(open(join(run_path, "display_requests.json")))
+    prediction_info = json.load(open(join(run_path, "display_predictions.json")))
+    instances_info = json.load(open(join(run_path, "instances.json")))
+    stats = json.load(open(join(run_path, "stats.json")))
     
     # Get the list of metrics
-    list_metrics = set([s["name"]["name"] for s in stats])
-    list_metrics = list(list_metrics)
-    if "num_completions" in list_metrics:
-        list_metrics.remove("num_completions")
+    list_metrics = list(set([s["name"]["name"] for s in stats]))
+    if "num_completions" in list_metrics: list_metrics.remove("num_completions")
     responses.update({metric: [] for metric in list_metrics})
     
     # Sort the request and prediction info
@@ -188,43 +144,34 @@ def process_response_1(responses, model_id, scenario_id, scenario_name, run_path
     instances_info = sorted(instances_info, key=lambda x: x["id"])
     
     for request, prediction, per_inst in zip(request_info, prediction_info, instances_info):
-        if request["instance_id"] != prediction["instance_id"]:
-            continue
-        
-        if per_inst["id"] != prediction["instance_id"]:
-            continue
-        
+        if not (request["instance_id"] == per_inst["id"] == prediction["instance_id"]): continue
         instance_index = f"{scenario_id}_{request['instance_id']}"
+
+        aug_type = ""
         if "data_augmentation=" in run_path:
             aug_type = run_path[run_path.find("data_augmentation=") + 18:].split(",")[0]
             instance_index += "_" + aug_type
-        else:
-            aug_type = ""
-            
+        
+        mode = ""
         if "mode=" in run_path:
             mode = run_path[run_path.find("mode=") + 5:].split(",")[0]
             instance_index += "_" + mode
-        else:
-            mode = ""
-            
+        
+        num_prompt_tokens = ""
         if "num_prompt_tokens=" in run_path:
             num_prompt_tokens = run_path[run_path.find("num_prompt_tokens=") + 18:].split(",")[0]
             instance_index += "_" + num_prompt_tokens
-        else:
-            num_prompt_tokens = ""
-            
+        
+        subject = ""
         if "subject=" in run_path:
             subject = run_path[run_path.find("subject=") + 8:].split(",")[0]
             instance_index += "_" + subject
-        else:
-            subject = ""
-            
+        
+        perturbation_type = ""
         if "perturbation" in request:
             perturbation_type = request["perturbation"]["name"]
             instance_index += "_" + perturbation_type
-        else:
-            perturbation_type = ""
-        
+
         if instance_index not in instance2index:
             instance_id = len(instances["prompt"])
             instances["instance_id"].append(instance_id)
@@ -246,21 +193,17 @@ def process_response_1(responses, model_id, scenario_id, scenario_name, run_path
         responses["model_id"].append(model_id)
         responses["scenarios_id"].append(scenario_id)
         responses["instance_id"].append(instance_id)
-        responses["temperature"].append(request["request"]["temperature"])
-        responses["num_completions"].append(request["request"]["num_completions"])
-        responses["top_k_per_token"].append(request["request"]["top_k_per_token"])
-        responses["max_tokens"].append(request["request"]["max_tokens"])
-        responses["stop_sequences"].append(request["request"]["stop_sequences"])
-        responses["echo_prompt"].append(request["request"]["echo_prompt"])
-        responses["top_p"].append(request["request"]["top_p"])
-        responses["presence_penalty"].append(request["request"]["presence_penalty"])
-        responses["frequency_penalty"].append(request["request"]["frequency_penalty"])
+
+        keys = [
+            "temperature", "num_completions", "top_k_per_token", "max_tokens",
+            "stop_sequences", "echo_prompt", "top_p", "presence_penalty", "frequency_penalty"
+        ]
+        for key in keys:
+            responses[key].append(request["request"][key])
         
         responses["predicted_text"].append(prediction["predicted_text"])
-        if "base64_images" not in prediction:
-            responses["base64_images"].append("")
-        else:
-            responses["base64_images"].append(prediction["base64_images"])
+        b64 = "base64_images"
+        responses[b64].append(prediction[b64] if b64 in prediction else "")
         
         for stat_name in list_metrics:
             if stat_name not in prediction["stats"]:
@@ -283,15 +226,13 @@ def process_response_1(responses, model_id, scenario_id, scenario_name, run_path
                 responses["ablation_" + key] = [""] * len(responses["model_id"])
                     
     return pd.DataFrame(responses)
-    
 
 def process_response_2(responses, model_id, scenario_id, scenario_name, run_path, instances, instance2index):
     # Read the prompt and prediction info
-    request_info = json.load(open(os.path.join(run_path, "scenario_state.json")))
-    request_info = request_info["request_states"]
-    prediction_info = json.load(open(os.path.join(run_path, "per_instance_stats.json")))
-    instances_info = json.load(open(os.path.join(run_path, "instances.json")))
-    stats = json.load(open(os.path.join(run_path, "stats.json")))
+    request_info = json.load(open(join(run_path, "scenario_state.json")))["request_states"]
+    prediction_info = json.load(open(join(run_path, "per_instance_stats.json")))
+    instances_info = json.load(open(join(run_path, "instances.json")))
+    stats = json.load(open(join(run_path, "stats.json")))
     
     # Get the list of metrics
     list_metrics = set([s["name"]["name"] for s in stats])
@@ -385,9 +326,7 @@ def process_response_2(responses, model_id, scenario_id, scenario_name, run_path
                 responses[stat_name].append(None)
                 continue
 
-            responses[stat_name].append(
-                prediction["stats"][all_avai_stats[stat_name]]["sum"]
-            )
+            responses[stat_name].append(prediction["stats"][all_avai_stats[stat_name]]["sum"])
             
     # Set the ablation keys, e.g. fewshots, chain-of-thought, etc.
     if scenario_name in RUNNING_ENVS:
@@ -404,7 +343,6 @@ def process_response_2(responses, model_id, scenario_id, scenario_name, run_path
                     
     return pd.DataFrame(responses)
 
-
 def join_prediction_info(prediction_info):
     unique_instance_ids = [x["instance_id"] for x in prediction_info]
     unique_instance_ids = list(set(unique_instance_ids))
@@ -419,80 +357,35 @@ def join_prediction_info(prediction_info):
             first_instance["stats"] += inst["stats"]
         new_prediction_info.append(first_instance)
     return new_prediction_info
-    
-    
-def merge_results(results):
-    return pd.concat(results)
-
         
-if __name__ == "__main__":
-    if os.path.exists("CSV/model_df.csv"):
-        print("Model df already exists")
-        model_df = pd.read_csv("CSV/model_df.csv")
-    else:
-        model_dfs = []
-        for benchmark in BENCHMARKS:
-            model_df = get_list_models(benchmark)
-            model_dfs.append(model_df)
-        
-        # Merge the model dfs
-        model_df = merge_model_df(model_dfs)
-        model_df['model_id'] = model_df.index
-        
-        # Save the model df
-        model_df.to_csv("CSV/model_df.csv", index=False)
-    
-    # Create a dictionary of model name to model id
-    MODEL_NAME2ID = dict(zip(model_df['name'], model_df['model_id']))
-    
+if __name__ == "__main__":   
     for benchmark in BENCHMARKS:
-        # Skip the benchmarks that are already processed
-        if os.path.exists(f"CSV/{benchmark}/responses.pkl"):
-            print(f"Skipping {benchmark}")
-            continue
+        # if exists(f"CSV/{benchmark}/responses.pkl"): continue
         
-        # Get the run paths
-        run_paths = get_run_path(benchmark)
-        
-        if run_paths is None or len(run_paths) == 0:
-            continue
-        
-        # Sort the run paths
-        run_paths = sorted(run_paths)
-        
-        # Process the runs
         run_results = []
-        scenarios = {
-            "scenarios_id": [],
-            "name": [],
-        }
-        instances = {
-            "instance_id": [],
-            "scenarios_id": [],
-            "instance_sid": [],
-            "data_augmentation": [],
-            "perturbation": [],
-            "subject": [],
-            "mode": [],
-            "num_prompt_tokens": [],
-            "prompt": [],
-            "raw_question": [],
-        }
+        scenarios = {"scenarios_id": [], "name": []}
+        keys = [
+            "instance_id", "scenarios_id", "instance_sid", "data_augmentation",
+            "perturbation", "subject", "mode", "num_prompt_tokens", "prompt", "raw_question"
+        ]
+        instances = {key: [] for key in keys}
         instance2index = {}
+
+        # Get the run paths and process them
+        run_paths = get_run_path(f"helm_jsons/{benchmark}")
+        if not run_paths: continue
+        run_paths = sorted(run_paths)
         for run_path in tqdm(run_paths, desc=f"Processing {benchmark}"):
-            if "instructions=none" in run_path:
-                # Skip duplicate runs
-                continue
-            results = process_run(run_path, MODEL_NAME2ID, scenarios, instances, instance2index)
+            if "instructions=none" in run_path: continue # Skip duplicate runs
+            results = process_run(run_path, scenarios, instances, instance2index)
             run_results.append(results)
             
         # Merge and save the results
-        run_results = merge_results(run_results)
-        
-        # Save the results, scenarios and instances
+        run_results = pd.concat(run_results)
         os.makedirs(f"CSV/{benchmark}", exist_ok=True)
-        # run_results.to_csv(f"CSV/{benchmark}/responses.csv", index=False)
         pickle.dump(run_results, open(f"CSV/{benchmark}/responses.pkl", "wb"))
         pd.DataFrame(scenarios).to_csv(f"CSV/{benchmark}/scenarios.csv", index=False)
         pd.DataFrame(instances).to_csv(f"CSV/{benchmark}/instances.csv", index=False)
-            
+
+
+data = pickle.load(open(f"CSV/classic/responses.pkl", "rb"))
