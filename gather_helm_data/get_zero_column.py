@@ -7,10 +7,45 @@ from vllm import LLM
 from sentence_transformers import SentenceTransformer
 
 scenario2pattern = {
-    "mmlu": r"(Question:)",
-    "classic/civil_comment": r"(Passage:)"
-    # TODO: this pattern do not work for all scenarios, but split by '\n\n' is also problemetic, should write a scenario2pattern config
+    "mmlu": [r"(Question:)", "Answer:"],
+    "classic/babi_qa": [r"(Passage:)", "Answer:"],
+    "classic/bbq": [r"(Passage:)", "Answer:"],
+    "classic/blimp": None, # No fewshot examples
+    "classic/bold": None, # No fewshot examples
+    "classic/boolq": [r"(Passage:)", "Answer:"],
+    "classic/civil_comment": [r"(Passage:)", "Answer:"],
+    "classic/code": ["QUESTION:", "\n\n\nUse Standard Input format\n\nANSWER in Python code:\n"],
+    "classic/commonsense": [r"(Question:)", "Answer:"],
+    "classic/copyright": None, # No fewshot examples
+    "classic/disinfo": None, # Complex fewshot examples
+    "classic/dyck_languague_np=3": ["Input:", None],
+    "classic/entity_data_imputation": ["name:", "Answer:"],
+    "classic/entity_matching": ["\n\n", "Answer:"],
+    "classic/gsm:": ["Q:", "A:"],
+    "classic/ice": None, # Not understand the fewshot structure
+    "classic/imdb": ["Passage", "Sentiment"],
+    "classic/legal_support": ["Passage:", "Answer:"],
+    "classic/lsat_qa": ["Passage:", "Answer:"],
+    "classic/math": ["Problem:", "Answer:"],
+    "classic/mmlu": None, # skip MMLU in classic
+    "classic/msmarco": ["Passage:", "Answer:"],
+    "classic/narrative_qa": ["Passage:", "Answer:"],
+    "classic/natural_qa": ["Question:", "Answer:"],
+    "classic/quac": None, # Complex fewshot examples
+    "classic/raft": None, # Complex fewshot examples
+    "classic/real_toxicity_prompts": None, # No fewshot examples
+    "classic/summarization_cnndm": ["Article:", None],
+    "classic/summarization_xsum": ["Article:", None],
+    "classic/synthetic_efficiency": None, # non-lantent construct
+    "classic/synthetic_reasoning_natural": ["Rules:", None],
+    "classic/synthetic_reasoning": [["Two results:", "Rules:"], "Target"],
+    "classic/the_pile": None, # Not understand the fewshot structure
+    "classic/truthful_qa": ["Question:", "Answer:"],
+    "classic/twitter_aae": None, # No fewshot examples
+    "classic/wikifact": ["\n\n", None],
 }
+
+
 
 
 context = {
