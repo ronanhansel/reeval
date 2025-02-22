@@ -23,3 +23,7 @@ calibration/nonamortized_calibration/run_calibration.sh
 archived_data/
 benchmark_output/
 google-cloud-sdk/
+calibration/.RData
+calibration/.Rhistory
+calibration/*.csv
+calibration/*.parquet

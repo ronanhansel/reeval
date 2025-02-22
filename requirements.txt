@@ -18,3 +18,4 @@ flash-attn @ https://github.com/Dao-AILab/flash-attention/releases/download/v2.5
 vllm==0.6.3.post1
 torchmetrics
 trl==0.12.1
+fastparquet
