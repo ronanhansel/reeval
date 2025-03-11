@@ -16,7 +16,6 @@ mcmc_2pl_calibration/
 hard-easy_test_new_em/
 commonsense/
 results/
-*.ipynb
 *.png
 hard_easy_test_new_em/
 calibration/nonamortized_calibration/run_calibration.sh
@@ -26,4 +25,8 @@ google-cloud-sdk/
 calibration/.RData
 calibration/.Rhistory
 calibration/*.csv
+calibration/*.pkl
+calibration/*.pt
 calibration/*.parquet
+gather_helm_data/helm_jsons/*
+gather_helm_data/helm_tables/*
