@@ -51,3 +51,7 @@ for dataset in "${datasets[@]}"; do
     echo "Runing SFT analysis on $dataset"
     python 3_sft_analysis.py --dataset $dataset --model stair-lab/reeval_Meta-Llama-3.1-8B-Instruct
 done
+
+export PYTHONPATH=$(pwd)
+export CUDA_VISIBLE_DEVICES=0,4
+python 3_sft_analysis.py --dataset air-bench/air_bench_2024 --model stair-lab/reeval_mmlu_Meta-Llama-3.1-8B-Instruct --run_generation --num_restarts 2

@@ -3,7 +3,6 @@ import pandas as pd
 import torch
 import numpy as np
 import pickle
-from torchmetrics.functional import spearman_corrcoef
 
 dataset = "mmlu"
 data_folder = snapshot_download(
@@ -22,10 +21,7 @@ df = pd.merge(df_responses, instances, on="instance_id")
 subjects = df["subject"].unique()
 
 # filter out the row of subject[0] and subject[1]
-np.random.seed(1)
-np.random.shuffle(subjects)
-subjects_subset = subjects[0:1]
-
+subjects_subset = subjects
 df_subject = df[df["subject"].isin(subjects_subset)]
 
 # only keep the model_id, instance_id, and exact_match columns
@@ -47,28 +43,22 @@ df_subject = df_subject.fillna(-1)
 # convert type to int
 df_subject = df_subject.astype(int)
 
+# visualize the df_subject with a matrx red is 0, white is -1 and blue is 1
+# the matrix is 75 * 14k, but make its size more like 20 by 40 for visualization
+import matplotlib.pyplot as plt
+from tueplots import bundles
+bundles.icml2024()
+
+with plt.rc_context(bundles.icml2024(usetex=True, family="serif")):
+    plt.figure(figsize=(20, 10))
+    plt.matshow(df_subject, aspect="auto", cmap="bwr")
+    plt.colorbar()
+    plt.savefig(f"{dataset}_response_matrix.png", dpi=600, bbox_inches="tight")
+
+breakpoint()
+
 # save the data to csv file without index and header and type int
 df_subject.to_csv(f"Subset.csv", index=False, header=False)
-
-# save the file to .pt format and pust to huggingface hub to check with 
-# python calibration
-df_subject = torch.tensor(df_subject.values)
-torch.save(df_subject, f"response_matrix.pt")
-
-api = HfApi()
-api.upload_file(
-    repo_id="stair-lab/reeval_matrices",
-    path_in_repo="mmlu0/response_matrix.pt",
-    path_or_fileobj="response_matrix.pt",
-    repo_type="dataset"
-)
-
-# read the file again to check if it is saved correctly
-data_folder = snapshot_download(
-    repo_id="stair-lab/reeval_matrices", repo_type="dataset"
-)
-response_matrix = torch.load(f"{data_folder}/mmlu0/response_matrix.pt")
-######################################################################
 
 # Run the mirt.R script to get the item_difficulty and ability_MAP
 import subprocess
@@ -80,37 +70,6 @@ ability = pd.read_csv(f"ability_MAP.csv", header=None)
 item_difficulty = torch.tensor(item_difficulty.values)
 item_difficulty = item_difficulty[:, 1]
 ability = torch.tensor(ability.values)[:, 0]
-
-item_difficulty_python = pd.read_csv(f"difficulties_python.csv", header=None)
-ability_python = pd.read_csv(f"abilities_python.csv", header=None)
-
-item_difficulty_python = torch.tensor(item_difficulty_python.values)
-ability_python = torch.tensor(ability_python.values)
-
-# mean score across users 
-item_difficulty_ctt = df_subject.float().mean(axis=0)
-torch.corrcoef(torch.stack([item_difficulty, item_difficulty_ctt]))
-torch.corrcoef(torch.stack([item_difficulty_python.squeeze(), item_difficulty_ctt]))
-
-# spearman correlation
-spearman_corrcoef(item_difficulty, item_difficulty_ctt)
-
-diff = torch.stack([item_difficulty.flatten(), item_difficulty_python.flatten()])
-corr = torch.corrcoef(diff)
-print(corr)
-
-diff = diff.numpy()
-import matplotlib.pyplot as plt
-plt.scatter(diff[0], diff[1])
-plt.savefig("difficulties.png", dpi=300, bbox_inches="tight")
-
-breakpoint()
-
-
-
-print("Correlation between item_difficulty:", corr[0, 1])
-corr = np.corrcoef(ability.values.flatten(), ability_python.flatten())
-print("Correlation between ability:", corr[0, 1])
 
 n_item = item_difficulty.shape[0]
 n_testtaker = ability.shape[0]

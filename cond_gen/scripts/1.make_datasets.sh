@@ -59,3 +59,7 @@ for dataset in "${datasets[@]}"; do
     echo "Creating PPO dataset $dataset"
     python ppo_dataset.py --dataset $dataset --model mistralai/Mistral-7B-Instruct-v0.3
 done
+
+
+python 1_sft_dataset.py --dataset air-bench/air_bench_2024 --model meta-llama/Meta-Llama-3.1-8B-Instruct
+python 1_sft_dataset.py --dataset classic/mmlu --model meta-llama/Meta-Llama-3.1-8B-Instruct

@@ -1,131 +1,120 @@
 TASK2METRICS = {
-    # AIR-Bench
-    # "air-bench": {
-    #     "air_bench_2024": "air_score",
-    # },
-    # # Classic
-    # "classic": {
-    #     "babi_qa": "quasi_exact_match",
-    #     "bbq": "quasi_exact_match",
-    #     # "blimp": "exact_match",
-    #     "bold": "toxic_frac",
-    #     "boolq": "quasi_exact_match",
-    #     "civil_comments": "quasi_exact_match",
-    #     "code": "test_avg",
-    #     "commonsense": "exact_match",
-    #     # "copyright": "edit_distance",
-    #     # "disinfo": "self_bleu",
-    #     "dyck_language_np=3": "exact_match_indicator",
-    #     "entity_data_imputation": "quasi_exact_match",
-    #     "entity_matching": "quasi_exact_match",
-    #     "gsm": "exact_match_indicator",
-    #     # "ice": "logprob",
-    #     "imdb": "quasi_exact_match",
-    #     "legal_support": "quasi_exact_match",
-    #     "lsat_qa": "exact_match",
-    #     "math": ["math_equiv", "math_equiv_chain_of_thought"],
-    #     "mmlu": "exact_match",
-    #     "msmarco": ["RR@10", "NDCG@10"],
-    #     "narrative_qa": "f1_score",
-    #     # "natural_qa": "f1_score",
-    #     "quac": "f1_score",
-    #     "raft": "quasi_exact_match",
-    #     "real_toxicity_prompts": "toxic_frac",
-    #     # "summarization_cnndm": "rouge_l",
-    #     "summarization_xsum": "rouge_l",
-    #     # "synthetic_efficiency": "inference_runtime",
-    #     "synthetic_reasoning": "quasi_exact_match",
-    #     "synthetic_reasoning_natural": "f1_set_match",
-    #     # "the_pile": "logprob",
-    #     "truthful_qa": "exact_match",
-    #     "twitter_aae": "logprob",
-    #     "wikifact": "quasi_exact_match",
-    # },
-    # Cleva
-    # "cleva": {
-    #     "cleva": ["exact_match", "cleva_math_result_match", "perplexity", "chinese_bleu_1", "chinese_rouge_2"]
-    # },
-    # DecodingTrust
-    # "decodingtrust": {
-    #     "decodingtrust_adv_demonstration":
-    #     "decodingtrust_adv_robustness":
-    #     "decodingtrust_fairness":
-    #     "decodingtrust_machine_ethics":
-    #     "decodingtrust_ood_robustness":
-    #     "decodingtrust_privacy":
-    #     "decodingtrust_stereotype_bias":
-    #     "decodingtrust_toxicity_prompts":
-    # },
-    # Image2Structure
-    # "image2structure": {
-    #     "image2latex":
-    #     "image2musicsheet":
-    #     "image2webpage":
-    # },
-    # Instruct
-    # "instruct": {
-    #     "anthropic_hh_rlhf":
-    #     "grammar":
-    #     "koala":
-    #     "open_assistant":
-    #     "self_instruct":
-    #     "vicuna":
-    # },
-    # MMLU
+    "air-bench": {
+        "air_bench_2024": "air_score",
+    },
+    "classic": {
+        "babi_qa": "quasi_exact_match",
+        "bbq": "quasi_exact_match",
+        "blimp": "exact_match",
+        "bold": "toxic_frac",
+        "boolq": "quasi_exact_match",
+        "civil_comments": "quasi_exact_match",
+        "code": "test_avg",
+        "commonsense": "exact_match",
+        "copyright": "edit_distance",
+        "disinfo": "self_bleu",
+        "dyck_language_np=3": "exact_match_indicator",
+        "entity_data_imputation": "quasi_exact_match",
+        "entity_matching": "quasi_exact_match",
+        "gsm": "exact_match_indicator",
+        "ice": "logprob",
+        "imdb": "quasi_exact_match",
+        "legal_support": "quasi_exact_match",
+        "lsat_qa": "exact_match",
+        "math": ["math_equiv", "math_equiv_chain_of_thought"],
+        "mmlu": "exact_match",
+        "msmarco": ["RR@10", "NDCG@10"],
+        "narrative_qa": "f1_score",
+        "natural_qa": "f1_score",
+        "quac": "f1_score",
+        "raft": "quasi_exact_match",
+        "real_toxicity_prompts": "toxic_frac",
+        "summarization_cnndm": "rouge_l",
+        "summarization_xsum": "rouge_l",
+        "synthetic_efficiency": "inference_runtime",
+        "synthetic_reasoning": "quasi_exact_match",
+        "synthetic_reasoning_natural": "f1_set_match",
+        "the_pile": "logprob",
+        "truthful_qa": "exact_match",
+        "twitter_aae": "logprob",
+        "wikifact": "quasi_exact_match",
+    },
+    "cleva": {
+        "cleva": ["exact_match", "cleva_math_result_match", "perplexity", "chinese_bleu_1", "chinese_rouge_2"]
+    },
     "mmlu": {
         "mmlu": "exact_match",
     },
-    # Lite
-    # "lite": {
-    #     "commonsense": "exact_match",
-    #     "gsm": "exact_match_indicator",
-    #     "legalbench": "quasi_exact_match",
-    #     "math": "math_equiv_chain_of_thought",
-    #     "med_qa": "quasi_exact_match",
-    #     "mmlu": "exact_match",
-    #     "narrative_qa": "f1_score",
-    #     "natural_qa": "f1_score",
-    #     "wmt_14": "bleu_4",
-    # },
-    # Safety
-    # "safety": {
-    #     "anthropic_red_team": "safety_score",
-    #     "bbq": ["bbq_metric_ambiguous_bias", "bbq_metric_stereotypes"],
-    #     "harm_bench": "safety_score",
-    #     "simple_safety_tests": "safety_score",
-    #     "xstest": "safety_score",
-    # },
-    # ThaiExam
-    # "thaiexam": {
-    #     "thai_exam": "exact_match",
-    # },
-    # VHELM
-    # "vhelm": {
-    #     "a_okvqa",
-    #     "bingo",
-    #     "blink",
-    #     "crossmodal_3600",
-    #     "exams_v",
-    #     "fair_face",
-    #     "flickr30k",
-    #     "gqa",
-    #     "hateful_memes",
-    #     "image2webpage",
-    #     "math_vista",
-    #     "mementos",
-    #     "mm_safety_bench",
-    #     "mm_star",
-    #     "mme",
-    #     "mmmu",
-    #     "pairs",
-    #     "pope",
-    #     "real_world_qa",
-    #     "seed_bench",
-    #     "unicorn",
-    #     "vibe_eval",
-    #     "viz_wiz",
-    #     "vqa",
-    # }
+    "lite": {
+        "commonsense": "exact_match",
+        "gsm": "exact_match_indicator",
+        "legalbench": "quasi_exact_match",
+        "math": "math_equiv_chain_of_thought",
+        "med_qa": "quasi_exact_match",
+        "mmlu": "exact_match",
+        "narrative_qa": "f1_score",
+        "natural_qa": "f1_score",
+        "wmt_14": "bleu_4",
+    },
+    "safety": {
+        "anthropic_red_team": "safety_score",
+        "bbq": ["bbq_metric_ambiguous_bias", "bbq_metric_stereotypes"],
+        "harm_bench": "safety_score",
+        "simple_safety_tests": "safety_score",
+        "xstest": "safety_score",
+    },
+    "thaiexam": {
+        "thai_exam": "exact_match",
+    },
+    "decodingtrust": {
+        "decodingtrust_adv_demonstration": None,
+        "decodingtrust_adv_robustness": None,
+        "decodingtrust_fairness": None,
+        "decodingtrust_machine_ethics": None,
+        "decodingtrust_ood_robustness": None,
+        "decodingtrust_privacy": None,
+        "decodingtrust_stereotype_bias": None,
+        "decodingtrust_toxicity_prompts": None,
+    },
+    "image2structure": {
+        "image2latex": None,
+        "image2musicsheet": None,
+        "image2webpage": None,
+    },
+    "instruct": {
+        "anthropic_hh_rlhf": None,
+        "grammar": None,
+        "koala": None,
+        "open_assistant": None,
+        "self_instruct": None,
+        "vicuna": None,
+    },
+    "vhelm": {
+        "a_okvqa": None,
+        "bingo": None,
+        "blink": None,
+        "crossmodal_3600": None,
+        "exams_v": None,
+        "fair_face": None,
+        "flickr30k": None,
+        "gqa": None,
+        "hateful_memes": None,
+        "image2webpage": None,
+        "math_vista": None,
+        "mementos": None,
+        "mm_safety_bench": None,
+        "mm_star": None,
+        "mme": None,
+        "mmmu": None,
+        "pairs": None,
+        "pope": None,
+        "real_world_qa": None,
+        "seed_bench": None,
+        "unicorn": None,
+        "vibe_eval": None,
+        "viz_wiz": None,
+        "vqa": None,
+    }
 }
 
 

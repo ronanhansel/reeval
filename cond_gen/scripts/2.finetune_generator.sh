@@ -12,13 +12,19 @@
 # # - Number of GPUs: [Number_of_GPUs]
 # # - Dtype: BF16
 
-export LIBRARY_PATH=/lfs/skampere1/0/nqduc/miniconda3/envs/lf/lib/python3.10/site-packages/torch/lib:/lfs/skampere1/0/nqduc/miniconda3/envs/lf/lib:$LIBRARY_PATH
-export LD_LIBRARY_PATH=/lfs/skampere1/0/nqduc/miniconda3/envs/lf/lib/python3.10/site-packages/torch/lib:/lfs/skampere1/0/nqduc/miniconda3/envs/lf/lib:$LD_LIBRARY_PATH
+export LIBRARY_PATH=/lfs/skampere1/0/sttruong/miniconda3/envs/reeval/lib/python3.10/site-packages/torch/lib:/lfs/skampere1/0/sttruong/miniconda3/envs/reeval/lib:$LIBRARY_PATH
+export LD_LIBRARY_PATH=/lfs/skampere1/0/sttruong/miniconda3/envs/reeval/lib/python3.10/site-packages/torch/lib:/lfs/skampere1/0/sttruong/miniconda3/envs/reeval/lib:$LD_LIBRARY_PATH
+
+# export LIBRARY_PATH=/lfs/ampere1/0/sttruong/miniconda3/envs/reeval/lib/python3.10/site-packages/torch/lib:/lfs/ampere1/0/sttruong/miniconda3/envs/reeval/lib:$LIBRARY_PATH
+# export LD_LIBRARY_PATH=/lfs/ampere1/0/sttruong/miniconda3/envs/reeval/lib/python3.10/site-packages/torch/lib:/lfs/ampere1/0/sttruong/miniconda3/envs/reeval/lib:$LD_LIBRARY_PATH
+
 
 # sft
 accelerate launch sft.py --config configs/sft.yaml
-python 2_merge_and_push.py ../data/sft/llama_lora_mmlu stair-lab/reeval_mmlu_Meta-Llama-3.1-8B-Instruct
+python 2_merge_and_push.py ../data/sft/lora_skampere stair-lab/reeval_mmlu_Meta-Llama-3.1-8B-Instruct
 
 # ppo
 python -m lampo.reward_server --model ppo_reward_model.MyRewardModel
 accelerate launch -m lampo.ppo_vllm --config configs/ppo.yaml
+
+

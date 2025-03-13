@@ -30,3 +30,5 @@ calibration/*.pt
 calibration/*.parquet
 gather_helm_data/helm_jsons/*
 gather_helm_data/helm_tables/*
+*.npy
+*.pkl.batch_count

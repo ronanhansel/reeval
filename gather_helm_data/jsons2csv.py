@@ -21,6 +21,9 @@ def infer_column_types(df):
             df[col] = df[col].astype("string").astype("category")
 
 if __name__ == "__main__":
+    task2metric = json.load(open("task2metric.json"))
+    task2metric = pd.json_normalize(task2metric)
+
     os.makedirs(f"CSV", exist_ok=True)
     BENCHMARKS = ["air-bench", "classic", "thaiexam", "mmlu"]
     lo = lambda x: json.load(open(x, "r"))
@@ -42,11 +45,18 @@ if __name__ == "__main__":
         d_requests = pd.json_normalize(d_requests)
         d_predictions = pd.json_normalize(d_predictions)
         run_specs = pd.json_normalize(run_specs)
-        run_specs["benchmark"] = paths.split("/")[1]
+        benchmark = paths.split("/")[1]
+        run_specs["benchmark"] = benchmark
         run_specs = run_specs.loc[run_specs.index.repeat(d_predictions.shape[0])].reset_index(drop=True)
         overlap_column = d_predictions.columns.intersection(d_requests.columns)
         d_requests = d_requests.drop(columns=overlap_column)
-        results.append(pd.concat([d_requests, d_predictions, run_specs], axis=1))
+        result = pd.concat([d_requests, d_predictions, run_specs], axis=1)
+        result[['scenario', 'name']] = result['name'].str.split(r'[:,]', n=1, expand=True)
+        result["scenario"] = result["scenario"].astype("category")
+        assert result["scenario"].nunique() == 1
+        metric_name = task2metric[f"{benchmark}.{result['scenario'].iloc[0]}"]
+        result["metric"] = results[metric_name]
+        results.append()
 
     results = pd.concat(results, axis=0, join='outer')
     infer_column_types(results)

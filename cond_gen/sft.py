@@ -57,7 +57,7 @@ class ScriptArguments:
     dataset_name: str
     dataset_train_split: str = "train"
     dataset_test_split: str = "test"
-    dataset_subset: str = "all"
+    dataset_subset: str = "air-bench_air_bench_2024_Meta-Llama-3.1-8B-Instruct" # "all"
     config: Optional[str] = None
     gradient_checkpointing_use_reentrant: bool = False
     ignore_bias_buffers: bool = False

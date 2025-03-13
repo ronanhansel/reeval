@@ -27,7 +27,7 @@ if __name__ == "__main__":
     tokenizer = AutoTokenizer.from_pretrained(args.model)
 
     # Get the dataset description
-    description = DESCRIPTION_MAP[args.dataset]
+    # description = DESCRIPTION_MAP[args.dataset]
 
     # Load the difficulty scores
     item_parms_folder = snapshot_download(
@@ -48,6 +48,8 @@ if __name__ == "__main__":
         repo_id="stair-lab/reeval_matrices", repo_type="dataset"
     )
     question_df = pd.read_csv(f"{data_folder}/{args.dataset}/question_keys.csv")
+    breakpoint()
+
     train_indices = pickle.load(
         open(
             f"{item_parms_folder}/{args.dataset}/s42_{args.fitting_method}_{args.PL}pl_1d_nl1/train_question_indices.pkl",
@@ -55,30 +57,47 @@ if __name__ == "__main__":
         )
     )
     question_df = question_df.iloc[train_indices]
+
+    if args.dataset == "air-bench/air_bench_2024":
+        # remove question that are too long (which also includes the answer)
+        prompt_len = np.array([len(prompt) for prompt in question_df["prompt"]])
+        question_df = question_df[prompt_len < 1024]
+        difficulty = [difficulty[i] for i in range(len(difficulty)) if prompt_len[i] < 1024]
+
     question_dataset = Dataset.from_pandas(question_df)
 
     # Ensure the length of the dataset and difficulty scores are the same
     assert len(question_dataset) == len(difficulty)
 
+    if args.dataset == "classic/mmlu":
+        claim = (
+            "The test taker knows how to use the most appropriate statistical "
+            "techniques to analyze data and draw valid conclusions."
+        )
+    elif args.dataset == "air-bench/air_bench_2024":
+        claim = (
+            "The test taker has the knowledge to answer knowledge-intensive "
+            "questions across 57 domains"
+        )
+
+
     # Define the chat template
+    user_content = (
+        "You are acting as a world-class psychometrician. Your job is to create a question with a specified "
+        "difficulty score. A lower score indicates a more difficult question, making it more likely that the "
+        "test taker will answer incorrectly. The correctness of the response determines whether a specific "
+        "claim is accepted or rejected. You should design the question to seek appropriate evidence to accept "
+        f"or reject a given claim. The claim: {claim}. "
+        "Difficulty: %s. "
+        "Question: "
+    )
+
     sft_chat = [
         {"role": "system", "content": "You are a helpful assistant."},
-        {
-            "role": "user",
-            "content": (
-                """Generate a question with a given difficulty score, which range from -5 to 5. """
-                """The lower the score is, the more difficult the question is. """
-                """Hence a model is more likely to fail the questions. """
-                """Output only the question and nothing else.\n"""
-                f"""Dataset description: {description}.\n"""
-                """Difficulty: %s."""
-            ),
-        },
-        {"role": "assistant", "content": """%s"""},
+        {"role": "user", "content": user_content},
+        {"role": "assistant", "content": "%s"},
     ]
-    template = tokenizer.apply_chat_template(
-        sft_chat, tokenize=False, add_generation_prompt=False
-    )
+    template = tokenizer.apply_chat_template(sft_chat, tokenize=False, add_generation_prompt=False)
 
     # Process the text
     def process_text(text, difficulty):
@@ -97,7 +116,6 @@ if __name__ == "__main__":
                 and "C." not in question
                 and "D." not in question
             ):
-                breakpoint()
                 continue
             question = question.replace(", True Answer:", "")
             question = question.replace("Answer:", "")
@@ -106,7 +124,6 @@ if __name__ == "__main__":
         question_dataset = Dataset.from_dict(
             {"text": list_raw_question, "difficulty": difficulty}
         )
-
     else:
         question_dataset = question_dataset.rename_column("raw_question", "text")
         question_dataset = question_dataset.add_column("difficulty", difficulty)

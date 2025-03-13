@@ -8,7 +8,7 @@ import warnings
 import matplotlib.pyplot as plt
 import pandas as pd
 import torch
-from amortized_irt import IRT
+from amortized_irt.irt import IRT
 from gen_figures.plot import auc_roc_plot, goodness_of_fit_plot, theta_corr_plot
 from huggingface_hub import snapshot_download
 from tqdm import tqdm
@@ -18,7 +18,8 @@ from utils.utils import arg2str
 
 warnings.filterwarnings("ignore")
 
-DATASETS = ["air-bench/air_bench_2024"]
+# DATASETS = ["air-bench/air_bench_2024"]
+DATASETS = ["mmlu/mmlu"]
 
 plt.rcParams.update(bundles.iclr2024())
 
@@ -71,7 +72,7 @@ if __name__ == "__main__":
     fig, axs = plt.subplots(4)
     D = [1]
     PL = [1]
-    fitting_methods = ["mle", "em"]
+    fitting_methods = ["em"]
     amortized_question = [False]  # [False, True]
     amortized_student = [False]  # [False, True]
     seeds = [42]
@@ -95,7 +96,7 @@ if __name__ == "__main__":
     result_folder = snapshot_download(
         repo_id="stair-lab/reeval_results", repo_type="dataset"
     )
-    res_file = open("results/calibration_results.txt", "w")
+    res_file = open("../results/calibration_results.txt", "w")
 
     for arg_list in cartesian_product:
         parser = argparse.ArgumentParser()
@@ -166,11 +167,13 @@ if __name__ == "__main__":
             # helm_score_train = helm_score[train_student_indices]
             helm_score_train = torch.zeros(len(train_student_indices), 1, device=device)
 
-            # ctt_score = torch.tensor(
-            #     model_keys["ctt_score"].to_numpy(), device=device
-            # ).reshape(-1, 1)
-            # ctt_score_train = ctt_score[train_student_indices]
-            ctt_score_train = torch.zeros(len(train_student_indices), 1, device=device)
+            breakpoint()
+
+            ctt_score = torch.tensor(
+                model_keys["ctt_score"].to_numpy(), device=device
+            ).reshape(-1, 1)
+            ctt_score_train = ctt_score[train_student_indices]
+            # ctt_score_train = torch.zeros(len(train_student_indices), 1, device=device)
 
             if args.amortized_question and args.amortized_student:
                 item_parms = get_amortized_questions(result_path, args)
@@ -356,6 +359,7 @@ if __name__ == "__main__":
                 )
 
                 # metric 2: correlation with CTT
+                breakpoint()
                 corr_ctt_mean, corr_ctt_std = theta_corr_plot(
                     mode="ctt",
                     theta=abilities,

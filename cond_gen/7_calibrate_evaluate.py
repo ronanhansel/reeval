@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import requests
 import torch
-from amortized_irt import IRT
+from amortized_irt.irt import IRT
 from datasets import load_dataset
 from huggingface_hub import HfApi, snapshot_download
 from ppo_reward_model import extract_score
