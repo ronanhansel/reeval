@@ -1,312 +1,76 @@
-# Make sure to run this script from the root of the project
-export LOCAL_BENCHMARK_OUTPUT_PATH=./helm_jsons
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH
-
-# Lite
-export LOCAL_BENCHMARK_OUTPUT_PATH=./helm_jsons/lite
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH
-export GCS_BENCHMARK_OUTPUT_PATH=gs://crfm-helm-public/lite/benchmark_output
-export RELEASE_VERSION=v1.12.0
-export SUITE_VERSION=v1.12.0
-
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export SUITE_VERSION=v1.0.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export SUITE_VERSION=v1.1.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export SUITE_VERSION=v1.2.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export SUITE_VERSION=v1.3.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export SUITE_VERSION=v1.4.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export SUITE_VERSION=v1.5.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export SUITE_VERSION=v1.6.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export SUITE_VERSION=v1.7.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export SUITE_VERSION=v1.8.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export SUITE_VERSION=v1.9.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export SUITE_VERSION=v1.10.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export SUITE_VERSION=v1.11.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export RELEASE_VERSION=v1.13.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION
-
-export SUITE_VERSION=v1.12.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export SUITE_VERSION=v1.13.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-
-# Classic
-export LOCAL_BENCHMARK_OUTPUT_PATH=./helm_jsons/classic
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH
-export GCS_BENCHMARK_OUTPUT_PATH=gs://crfm-helm-public/benchmark_output
-export RELEASE_VERSION=v0.4.0
-export SUITE_VERSION=v0.4.0
-
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export SUITE_VERSION=v0.3.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-
-
-# MMLU
-export LOCAL_BENCHMARK_OUTPUT_PATH=./helm_jsons/mmlu
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH
-export GCS_BENCHMARK_OUTPUT_PATH=gs://crfm-helm-public/mmlu/benchmark_output
-export RELEASE_VERSION=v1.12.0
-export SUITE_VERSION=v1.12.0
-
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export SUITE_VERSION=v1.0.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export SUITE_VERSION=v1.1.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export SUITE_VERSION=v1.2.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export SUITE_VERSION=v1.3.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export SUITE_VERSION=v1.4.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export SUITE_VERSION=v1.5.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export SUITE_VERSION=v1.6.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export SUITE_VERSION=v1.7.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export SUITE_VERSION=v1.8.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export SUITE_VERSION=v1.9.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export SUITE_VERSION=v1.10.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export SUITE_VERSION=v1.11.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export RELEASE_VERSION=v1.13.0
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION
-
-export SUITE_VERSION=v1.13.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-# # AIR-Bench
-export LOCAL_BENCHMARK_OUTPUT_PATH=./helm_jsons/air-bench
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH
-export GCS_BENCHMARK_OUTPUT_PATH=gs://crfm-helm-public/air-bench/benchmark_output
-
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export RELEASE_VERSION=v1.3.0
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION
-
-export RELEASE_VERSION=v1.4.0
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION
-
-export SUITE_VERSION=v1.0.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export SUITE_VERSION=v1.1.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export SUITE_VERSION=v1.2.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export SUITE_VERSION=v1.3.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export SUITE_VERSION=v1.4.0
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-
-# Cleva
-export LOCAL_BENCHMARK_OUTPUT_PATH=./helm_jsons/cleva
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH
-export GCS_BENCHMARK_OUTPUT_PATH=gs://crfm-helm-public/cleva/benchmark_output
-export RELEASE_VERSION=v1.0.0
-export SUITE_VERSION=v1.0.0
-
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-
-
-# DecodingTrust
-export LOCAL_BENCHMARK_OUTPUT_PATH=./helm_jsons/decodingtrust
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH
-export GCS_BENCHMARK_OUTPUT_PATH=gs://crfm-helm-public/decodingtrust/benchmark_output
-export RELEASE_VERSION=v0.1.0
-export SUITE_VERSION=v0.1.0
-
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-
-
-# HEIM
-export LOCAL_BENCHMARK_OUTPUT_PATH=./helm_jsons/heim
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH
-export GCS_BENCHMARK_OUTPUT_PATH=gs://crfm-helm-public/heim/benchmark_output
-export RELEASE_VERSION=v1.1.0
-export SUITE_VERSION=v1.1.0
-
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-
-
-# Instruct
-export LOCAL_BENCHMARK_OUTPUT_PATH=./helm_jsons/instruct
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH
-export GCS_BENCHMARK_OUTPUT_PATH=gs://crfm-helm-public/instruct/benchmark_output
-export RELEASE_VERSION=v1.0.0
-export SUITE_VERSION=v1.0.0
-
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-
-
-# Image2Structure
-export LOCAL_BENCHMARK_OUTPUT_PATH=./helm_jsons/image2structure
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH
-export GCS_BENCHMARK_OUTPUT_PATH=gs://crfm-helm-public/image2structure/benchmark_output
-export SUITE_VERSION=v1.0.2
-
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-
-
-# Safety
-export LOCAL_BENCHMARK_OUTPUT_PATH=./helm_jsons/safety
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH
-export GCS_BENCHMARK_OUTPUT_PATH=gs://crfm-helm-public/safety/benchmark_output
-export RELEASE_VERSION=v1.0.0
-export SUITE_VERSION=v1.0.0
-
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-
-
-# ThaiExam
-export LOCAL_BENCHMARK_OUTPUT_PATH=./helm_jsons/thaiexam
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH
-export GCS_BENCHMARK_OUTPUT_PATH=gs://crfm-helm-public/thaiexam/benchmark_output
-export RELEASE_VERSION=v1.1.0
-export SUITE_VERSION=v1.1.0
-
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/releases/$RELEASE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-export SUITE_VERSION=v1.0.0
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-
-
-
-# VHELM
-export LOCAL_BENCHMARK_OUTPUT_PATH=./helm_jsons/vhelm
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH
-export GCS_BENCHMARK_OUTPUT_PATH=gs://crfm-helm-public/vhelm/benchmark_output
-export SUITE_VERSION=v2.1.0
-
-mkdir -p $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
-gcloud storage rsync -r $GCS_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION $LOCAL_BENCHMARK_OUTPUT_PATH/runs/$SUITE_VERSION
+#!/bin/bash
+set -e
+
+mkdir -p ./helm_jsons
+
+# Define benchmarks and their GCS paths.
+declare -A gcs_paths=(
+  [lite]="gs://crfm-helm-public/lite/benchmark_output"
+  [classic]="gs://crfm-helm-public/benchmark_output"
+  [mmlu]="gs://crfm-helm-public/mmlu/benchmark_output"
+  [air-bench]="gs://crfm-helm-public/air-bench/benchmark_output"
+  [cleva]="gs://crfm-helm-public/cleva/benchmark_output"
+  [decodingtrust]="gs://crfm-helm-public/decodingtrust/benchmark_output"
+  [heim]="gs://crfm-helm-public/heim/benchmark_output"
+  [instruct]="gs://crfm-helm-public/instruct/benchmark_output"
+  [image2structure]="gs://crfm-helm-public/image2structure/benchmark_output"
+  [safety]="gs://crfm-helm-public/safety/benchmark_output"
+  [thaiexam]="gs://crfm-helm-public/thaiexam/benchmark_output"
+  [vhelm]="gs://crfm-helm-public/vhelm/benchmark_output"
+)
+
+# Define release versions for each benchmark (if applicable).
+declare -A releases=(
+  [lite]="v1.12.0 v1.13.0"
+  [classic]="v0.4.0"
+  [mmlu]="v1.12.0 v1.13.0"
+  [air-bench]="v1.3.0 v1.4.0"
+  [cleva]="v1.0.0"
+  [decodingtrust]="v0.1.0"
+  [heim]="v1.1.0"
+  [instruct]="v1.0.0"
+  [safety]="v1.0.0"
+  [thaiexam]="v1.1.0"
+)
+
+# Define suite run versions for each benchmark.
+declare -A suites=(
+  [lite]="v1.{0..13}.0"
+  [classic]="v0.3.0 v0.4.0"
+  [mmlu]="v1.{0..13}.0"
+  [air-bench]="v1.{0..4}.0"
+  [cleva]="v1.0.0"
+  [decodingtrust]="v0.1.0"
+  [heim]="v1.1.0"
+  [instruct]="v1.0.0"
+  [image2structure]="v1.0.2"
+  [safety]="v1.0.0"
+  [thaiexam]="v1.1.0 v1.0.0"
+  [vhelm]="v2.1.0"
+)
+
+for benchmark in "${!gcs_paths[@]}"; do
+  echo "Syncing benchmark: $benchmark"
+  local_path="./helm_jsons/$benchmark"
+  mkdir -p "$local_path"
+  gcs_path="${gcs_paths[$benchmark]}"
+
+  # Sync releases if defined.
+  if [ -n "${releases[$benchmark]}" ]; then
+    for ver in ${releases[$benchmark]}; do
+      echo "  - Release: $ver"
+      mkdir -p "$local_path/releases/$ver"
+      gcloud storage rsync -r "$gcs_path/releases/$ver" "$local_path/releases/$ver"
+    done
+  fi
+
+  # Sync suite runs if defined.
+  if [ -n "${suites[$benchmark]}" ]; then
+    # Expand brace notation if present.
+    for ver in $(eval echo ${suites[$benchmark]}); do
+      echo "  - Suite run: $ver"
+      mkdir -p "$local_path/runs/$ver"
+      gcloud storage rsync -r "$gcs_path/runs/$ver" "$local_path/runs/$ver"
+    done
+  fi
+done
