@@ -12,7 +12,7 @@ pip install -r requirements.txt
 ```
 
 
-To download the `data/` folder:
+To download the `data/` folder (hosted at [HuggingFace](https://huggingface.co/datasets/stair-lab/reeval_data_public)):
 ```bash
 python download.py --folder data
 ```
