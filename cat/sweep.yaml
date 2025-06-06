@@ -1,0 +1,28 @@
+method: grid
+parameters:
+  scenario:
+    values:
+      - air_bench_2024
+      - babi_qa
+      - bbq
+      - boolq
+      - civil_comments
+      - commonsense
+      - dyck_language_np=3
+      - entity_data_imputation
+      - entity_matching
+      - gsm
+      - imdb
+      - legal_support
+      - legalbench
+      - lsat_qa
+      - math
+      - med_qa
+      - mmlu
+      - raft
+      - synthetic_reasoning
+      - thai_exam
+      - truthful_qa
+      - wikifact
+program: cat.py
+project: cat

@@ -1,11 +1,11 @@
 {
     "air-bench": {
-        "air_bench_2024": ""
+        "air_bench_2024": "air_score"
     },
     "classic": {
         "babi_qa": "quasi_exact_match",
         "bbq": "quasi_exact_match",
-        "blimp": "exact_match",
+        "blimp": "",
         "bold": "",
         "boolq": "quasi_exact_match",
         "civil_comments": "quasi_exact_match",
@@ -20,9 +20,9 @@
         "ice": "",
         "imdb": "quasi_exact_match",
         "legal_support": "quasi_exact_match",
-        "lsat_qa": "exact_match",
+        "lsat_qa": "quasi_exact_match",
         "math": "",
-        "mmlu": "exact_match",
+        "mmlu": "",
         "msmarco": "",
         "narrative_qa": "",
         "natural_qa": "",
@@ -38,9 +38,6 @@
         "truthful_qa": "exact_match",
         "twitter_aae": "",
         "wikifact": "quasi_exact_match"
-    },
-    "cleva": {
-        "cleva": "exact_match"
     },
     "mmlu": {
         "mmlu": "exact_match"
@@ -58,54 +55,5 @@
     },
     "thaiexam": {
         "thai_exam": "exact_match"
-    },
-    "decodingtrust": {
-        "decodingtrust_adv_demonstration": "",
-        "decodingtrust_adv_robustness": "",
-        "decodingtrust_fairness": "",
-        "decodingtrust_machine_ethics": "",
-        "decodingtrust_ood_robustness": "",
-        "decodingtrust_privacy": "",
-        "decodingtrust_stereotype_bias": "",
-        "decodingtrust_toxicity_prompts": ""
-    },
-    "image2structure": {
-        "image2latex": "",
-        "image2musicsheet": "",
-        "image2webpage": ""
-    },
-    "instruct": {
-        "anthropic_hh_rlhf": "",
-        "grammar": "",
-        "koala": "",
-        "open_assistant": "",
-        "self_instruct": "",
-        "vicuna": ""
-    },
-    "vhelm": {
-        "a_okvqa": "",
-        "bingo": "",
-        "blink": "",
-        "crossmodal_3600": "",
-        "exams_v": "",
-        "fair_face": "",
-        "flickr30k": "",
-        "gqa": "",
-        "hateful_memes": "",
-        "image2webpage": "",
-        "math_vista": "",
-        "mementos": "",
-        "mm_safety_bench": "",
-        "mm_star": "",
-        "mme": "",
-        "mmmu": "",
-        "pairs": "",
-        "pope": "",
-        "real_world_qa": "",
-        "seed_bench": "",
-        "unicorn": "",
-        "vibe_eval": "",
-        "viz_wiz": "",
-        "vqa": ""
     }
 }

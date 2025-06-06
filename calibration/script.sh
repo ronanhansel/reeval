@@ -1,1 +1,0 @@
-python calibrate.py --dataset mmlu/mmlu --PL 1 --D 1 --fitting_method em --amortized_question False --amortized_student False 
