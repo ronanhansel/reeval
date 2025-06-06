@@ -2,7 +2,7 @@
 
 
 This repository implements the paper Reliable and Efficient Amortized Model-based Evaluation.
-
+The scripts in `./additional_analysis` is still undergoing cleaning.
 
 To set up the Python environment:
 ```bash
