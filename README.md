@@ -12,9 +12,9 @@ pip install -r requirements.txt
 ```
 
 
-To download the `data/` folder (hosted at [HuggingFace](https://huggingface.co/datasets/stair-lab/reeval_data_public)):
+To download the `data/` folder (hosted at [HuggingFace](https://huggingface.co/datasets/stair-lab/reeval)):
 ```bash
-python download.py --folder data
+python download.py
 ```
 
 
@@ -58,15 +58,6 @@ wandb agent xx/cat/xx
 After all the jobs finish, run:
 ```bash
 python cat_analysis.py
-```
-
-
-# (Optional) Download Result
-
-
-To download the `result/` folder:
-```bash
-python download.py --folder result
 ```
 
 
