@@ -20,6 +20,7 @@ def embed_sub_batch(idx, gpu_id, sub_batch, model_name):
     embs = [o.outputs.embedding for o in outputs]
     return idx, embs
 
+# Used prebuilt models to embed questions into fixed-dimension embeddings, purely lingual embedding
 if __name__ == "__main__":
     gpu_ids = [1,2,3]
     num_gpus = len(gpu_ids)
@@ -29,6 +30,7 @@ if __name__ == "__main__":
     
     # Load and filter prompts
     df = pd.read_pickle("../data/long.pkl")
+    # In this long.pkl, there are following columns being used
     df = df.dropna(subset=["dicho_score", "input.text"])
     unique_df = df.drop_duplicates(subset="input.text").reset_index(drop=True)
     print(unique_df["scenario"].unique())
